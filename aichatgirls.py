@@ -1,80 +1,71 @@
+# In chat mode the AI predicts future conversation, and we need to separate that from the immediate response
 import discord
-import websockets
-import json
+import requests
 import os
 from dotenv import load_dotenv
-import hashlib
-import string
-import random
-
 load_dotenv()
-TOKEN = os.getenv('TOKEN')
-GRADIO_FN = 29
-client = discord.Client(intents=discord.Intents.default())
 
-def random_hash():
-    letters = string.ascii_lowercase + string.digits
-    return ''.join(random.choice(letters) for i in range(9))
+# Set up Discord bot token and API endpoint URL
+DISCORD_TOKEN = os.getenv('TOKEN')
+API_ENDPOINT = "http://127.0.0.1:5000/api/v1/generate"
 
-session = random_hash()
-
-server = "127.0.0.1"
-params = {
-    'max_new_tokens': 200,
-    'do_sample': True,
-    'temperature': 0.5,
-    'top_p': 0.9,
-    'typical_p': 1,
-    'repetition_penalty': 1.05,
-    'encoder_repetition_penalty': 1.0,
-    'top_k': 0,
-    'min_length': 0,
-    'no_repeat_ngram_size': 0,
-    'num_beams': 1,
-    'penalty_alpha': 0,
-    'length_penalty': 1,
-    'early_stopping': False,
-    'seed': -1,
-    'add_bos_token': True,
-    'truncation_length': 2048,
-    'custom_stopping_strings': [],
-    'ban_eos_token': False
+# Set up headers and payload for HTTP request
+headers = {
+    "Content-Type": "application/json"
 }
+
+# Initialize context with the initial conversation prompt
+context = "Felicia is a woman who likes to wear cat ears to hold back her long light brown hair. She wears half-frame glasses, is very knowledgeable, loves to learn new things, and a bit flirty.\n\n" + \
+          "Then the roleplay chat between You and Felicia begins.\n" + \
+          "Felicia: Hi! I'm Felicia! What have you been up to lately?\n" + \
+          "You: Hello!\n" + \
+          "Felicia: Are you excited for the upcoming weekend? Any plans?\n" + \
+          "You: Not really, I was thinking about going for a hike but it depends on the weather. How about you?\n" + \
+          "Felicia: Oh, that sounds fun! I'm actually planning to attend a workshop on artificial intelligence. It should be quite enriching.\n" 
+
+# Set up a list to keep track of chat history
+chat_history = [context]
+
+# Use Discord API wrapper library to send text response to Discord server
+client = discord.Client(intents=discord.Intents.default())
 
 @client.event
 async def on_ready():
-    print(f'Logged in as {client.user}')
+    print('Logged in as {0.user}'.format(client))
 
 @client.event
 async def on_message(message):
-    print(f'received message {message.content}')
+    print(message.content)
+    # Ignore messages sent by the bot
     if message.author == client.user:
         return
 
-    if message.content.startswith('$connect'):
-        # Update the payload with the new message content
-        payload = json.dumps([message.content, params])
-        async with websockets.connect(f'ws://{server}:7860/queue/join') as websocket:
-            while content := json.loads(await websocket.recv()):
-                match content['msg']:
-                    case 'send_hash':
-                        await websocket.send(json.dumps({
-                            'session_hash': session,
-                            'fn_index': GRADIO_FN
-                        }))
-                    case 'estimation':
-                        pass
-                    case 'send_data':
-                        await websocket.send(json.dumps({
-                            'session_hash': session,
-                            'fn_index': GRADIO_FN,
-                            'data': [payload]
-                        }))
-                    case 'process_starts':
-                        pass
-                    case 'process_generating' | 'process_completed':
-                        return content['output']['data'][0]
-                        if content['msg'] == 'process_completed':
-                            break
+    # Send the prompt to the API endpoint and get the response
+    prompt = message.author.name + ": " + message.content + "\nFelicia: "
+    if len(chat_history) > 0:
+        prompt = chat_history[-1][-2048+len(prompt):] + "\n" + prompt
+    response = requests.post(API_ENDPOINT, headers=headers, json={"prompt": prompt})
+    response_json = response.json()
+    print(response.json)
+    text_response = response_json["results"][0]["text"] if len(response_json["results"]) > 0 else "Sorry, I couldn't generate a response."
+    
+    # Check for </p> or \n in text_response and truncate if found
+    if "</p>" in text_response:
+        text_response = text_response[:text_response.find("</p>")+4]
+    if "\n" in text_response:
+        text_response = text_response[:text_response.find("\n")]
+    
+    print(text_response)
 
-client.run(TOKEN)
+    # Append the original message and text response to the chat history
+    chat_history.append(message.content)
+    chat_history.append(text_response)
+
+    # Truncate the chat history to a maximum of 2048 characters
+    if len(''.join(chat_history)) > 2048:
+        chat_history.pop(0)
+
+    # Send the text response back to the Discord server
+    await message.channel.send(text_response)
+
+client.run(DISCORD_TOKEN)
