@@ -6,8 +6,7 @@ import json
 from dotenv import load_dotenv
 load_dotenv()
 
-import logging
-logging.basicConfig(level=logging.ERROR)
+MAX_CHAT_HISTORY_LENGTH = 5000
 
 # Set up Discord bot token and API endpoint URL
 DISCORD_TOKEN = os.getenv('TOKEN')
@@ -45,7 +44,8 @@ mes_example = metadata['mes_example']
 context = "Name: " + name + "\nDescription: " + description + "\nPersonality: " + personality
 
 # Set up a list to keep track of chat history
-chat_history = [mes_example, first_mes]
+chat_history = mes_example + first_mes
+chat_history = chat_history[-MAX_CHAT_HISTORY_LENGTH:]
 
 # Use Discord API wrapper library to send text response to Discord server
 client = discord.Client(intents=discord.Intents.default())
@@ -57,15 +57,20 @@ async def on_ready():
 @client.event
 async def on_message(message):
     print(message.content)
+    global chat_history
     # Ignore messages sent by the bot
     if message.author == client.user:
         return
 
     # Send the prompt to the API endpoint and get the response
-    prompt = message.author.name + ": " + message.content + "\nFelicia: "
-    prompt = context + ''.join(chat_history) + "\n" + prompt
-    prompt = prompt[-2048:]    
-    response = requests.post(API_ENDPOINT, headers=headers, json={"prompt": prompt})
+    prompt = message.author.name + ": " + message.content + "\n" + name + ": "
+    prompt = context + chat_history + "\n" + prompt
+    prompt = prompt[-MAX_CHAT_HISTORY_LENGTH:]
+    response = requests.post(
+        API_ENDPOINT,
+        headers=headers,
+        json={"prompt": prompt, "max_length": 60, "singleline": True}
+    )
     response_json = response.json()
     if len(response_json["results"]) > 0:
         text_response = response_json["results"][0]["text"]
@@ -81,13 +86,14 @@ async def on_message(message):
     print(text_response)
 
     # Append the original message and text response to the chat history
-    chat_history.append(message.content + "\nFelicia: ")
-    chat_history.append(text_response)
+    chat_history = chat_history + "\n" + message.author.name + ": " + message.content + "\n" + name + ": "
+    chat_history = chat_history + text_response
+    print(chat_history)
 
-    # Truncate the chat history to a maximum of 2048 characters
-    if len(''.join(chat_history)) > 2048:
-        chat_history.pop(0)
-
+    # Truncate the chat history to a maximum of MAX_CHAT_HISTORY_LENGTH characters
+    chat_history = chat_history[-MAX_CHAT_HISTORY_LENGTH:]
+    print(chat_history)
+    
     # Send the text response back to the Discord server
     await message.channel.send(text_response)
 
