@@ -6,7 +6,7 @@ import json
 from dotenv import load_dotenv
 load_dotenv()
 
-MAX_CHAT_HISTORY_LENGTH = 5000
+MAX_CHAT_HISTORY_LENGTH = 2048
 
 # Set up Discord bot token and API endpoint URL
 DISCORD_TOKEN = os.getenv('TOKEN')
@@ -69,7 +69,7 @@ async def on_message(message):
     response = requests.post(
         API_ENDPOINT,
         headers=headers,
-        json={"prompt": prompt, "max_length": 60, "singleline": True}
+        json={"prompt": prompt, "max_length": 120, "singleline": True}
     )
     response_json = response.json()
     if len(response_json["results"]) > 0:
