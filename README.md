@@ -12,6 +12,7 @@ You will need to install oobabooga's [text-generation-webui](https://github.com/
 Oobabooga has a broken API at the moment. If you git cloned their repo use this command: `git reset --hard 7ff645899e4610b16574bdd22a4d154c93d5b830` to revert to a working version.
 
 You'll also need to modify the `start-webui.bat` file: `call python server.py --auto-devices --chat --wbits 4 --groupsize 128 --listen --model gpt4-x-alpaca-13b-native-4bit-128g --pre_layer 28 --extensions api`
+Replace the model with whichever model you are using, and if you have more than 8gb of VRAM the `--pre_layer 28` part can be removed so it will run faster
  
 ##  Character cards
 Right now you have to rename your TavernAI character cards to character.webp and place it into your aichatgirls folder.
