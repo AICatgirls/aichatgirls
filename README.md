@@ -7,7 +7,7 @@ This is my first project ever. Any suggestions or contributions are welcome!
 You will need to install oobabooga's [text-generation-webui](https://github.com/oobabooga/text-generation-webui)
  - git clone https://github.com/AICatgirls/aichatgirls
  - pip install -r .\requirements.txt
- You will also need to create a discord bot replace the token in the .env file with your bot's token
+ You will also need to create a discord bot and create an .env file with your bot's token in the format `TOKEN='your-token-here'`
  
 ##  Character cards
 Right now you have to rename your TavernAI character cards to character.webp and place it into your aichatgirls folder.
