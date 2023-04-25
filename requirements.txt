@@ -1,3 +1,3 @@
 discord.py
-websockets
+requests
 python-dotenv
