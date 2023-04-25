@@ -2,8 +2,12 @@
 import discord
 import requests
 import os
+import json
 from dotenv import load_dotenv
 load_dotenv()
+
+import logging
+logging.basicConfig(level=logging.ERROR)
 
 # Set up Discord bot token and API endpoint URL
 DISCORD_TOKEN = os.getenv('TOKEN')
@@ -14,17 +18,34 @@ headers = {
     "Content-Type": "application/json"
 }
 
+# load a character card
+with open('character.webp', 'rb') as f:
+    webp_data = f.read()
+
+# There's probably a better way to get the JSON from the character card
+# Convert the binary data to a string
+webp_string = webp_data.decode('ISO-8859-1')
+
+# Extract the JSON string
+start_index = webp_string.find('{"p')
+end_index = webp_string.rfind('}') + 1
+json_string = webp_string[start_index:end_index]
+
+# Parse the JSON string to a Python object
+metadata = json.loads(json_string)
+
+# Access the properties
+name = metadata['name']
+description = metadata['description']
+personality = metadata['personality']
+first_mes = metadata['first_mes']
+mes_example = metadata['mes_example']
+
 # Initialize context with the initial conversation prompt
-context = "Felicia is a woman who likes to wear cat ears to hold back her long light brown hair. She wears half-frame glasses, is very knowledgeable, loves to learn new things, and a bit flirty.\n\n" + \
-          "Then the roleplay chat between You and Felicia begins.\n" + \
-          "Felicia: Hi! I'm Felicia! What have you been up to lately?\n" + \
-          "You: Hello!\n" + \
-          "Felicia: Are you excited for the upcoming weekend? Any plans?\n" + \
-          "You: Not really, I was thinking about going for a hike but it depends on the weather. How about you?\n" + \
-          "Felicia: Oh, that sounds fun! I'm actually planning to attend a workshop on artificial intelligence. It should be quite enriching.\n" 
+context = "Name: " + name + "\nDescription: " + description + "\nPersonality: " + personality
 
 # Set up a list to keep track of chat history
-chat_history = [context]
+chat_history = [mes_example, first_mes]
 
 # Use Discord API wrapper library to send text response to Discord server
 client = discord.Client(intents=discord.Intents.default())
@@ -42,12 +63,14 @@ async def on_message(message):
 
     # Send the prompt to the API endpoint and get the response
     prompt = message.author.name + ": " + message.content + "\nFelicia: "
-    if len(chat_history) > 0:
-        prompt = chat_history[-1][-2048+len(prompt):] + "\n" + prompt
+    prompt = context + ''.join(chat_history) + "\n" + prompt
+    prompt = prompt[-2048:]    
     response = requests.post(API_ENDPOINT, headers=headers, json={"prompt": prompt})
     response_json = response.json()
-    print(response.json)
-    text_response = response_json["results"][0]["text"] if len(response_json["results"]) > 0 else "Sorry, I couldn't generate a response."
+    if len(response_json["results"]) > 0:
+        text_response = response_json["results"][0]["text"]
+    else:
+        text_response = "Sorry, I couldn't generate a response."
     
     # Check for </p> or \n in text_response and truncate if found
     if "</p>" in text_response:
@@ -58,7 +81,7 @@ async def on_message(message):
     print(text_response)
 
     # Append the original message and text response to the chat history
-    chat_history.append(message.content)
+    chat_history.append(message.content + "\nFelicia: ")
     chat_history.append(text_response)
 
     # Truncate the chat history to a maximum of 2048 characters
