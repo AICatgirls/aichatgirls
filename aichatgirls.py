@@ -38,7 +38,6 @@ async def on_ready():
     character = load_character_card(client.user.name)
     context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}\n"
     print(context)
-    print(character.mes_example)
 
 @client.event
 async def on_message(message):
@@ -59,7 +58,7 @@ async def on_message(message):
     response = requests.post(
         API_ENDPOINT,
         headers=headers,
-        json={"prompt": prompt, "max_length": 200, "singleline": True}
+        json={"prompt": prompt, "max_length": 200, "singleline": True, "stopping_strings": ["\n","</p>"]}
     )
     response_json = response.json()
     if len(response_json["results"]) > 0:
