@@ -12,6 +12,11 @@ load_dotenv()
 
 MAX_CHAT_HISTORY_LENGTH = 8192 #change to 2048 for 8gb VRAM
 
+# Check if TOKEN is set in .env file
+if not os.getenv('TOKEN'):
+    print("Error: You need to create a .env file with TOKEN='your-discord-token' or the bot will not work")
+    exit(1)
+
 # Set up Discord bot token and API endpoint URL
 DISCORD_TOKEN = os.getenv('TOKEN')
 API_ENDPOINT = "http://127.0.0.1:5000/api/v1/generate"
