@@ -15,7 +15,7 @@ You'll also need to modify the `start-webui.bat` file: `call python server.py --
 Replace the model with whichever model you are using, and if you have more than 8gb of VRAM the `--pre_layer 28` part can be removed so it will run faster
  
 ##  Character cards
-Right now you have to rename your TavernAI character cards to character.webp and place it into your aichatgirls folder.
+Right now you have to rename your TavernAI character card to character.webp and place it into your aichatgirls folder.
 
 ## Starting
 Start Oobabooga's text-generation-webui (start-webui.bat)
