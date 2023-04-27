@@ -44,7 +44,7 @@ async def on_message(message):
     print(context)
     print(message.author)
     print(message.content)
-    chat_history = chatHistory.load_chat_history(message.author)
+    chat_history = chatHistory.load_chat_history(message.author, character.name)
     if chat_history == "":
         chat_history = character.mes_example + character.first_mes
     
