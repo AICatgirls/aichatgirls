@@ -1,6 +1,7 @@
-# TODO: try/except on requests
-# TODO: store chat_history in a file
-# TODO: using global chat_history prevents multi-threading
+# TODO: show when the bot is "typing"
+# TODO: add "reset" command to clear chat history
+# TODO: try/except on requests, handle disconnects
+# TODO: when the chat_history gets long oobabooga cuts off the context; make sure it gets preserved
 import discord
 import requests
 import os
@@ -10,7 +11,7 @@ from loadCharacterCard import load_character_card
 from dotenv import load_dotenv
 load_dotenv()
 
-MAX_CHAT_HISTORY_LENGTH = 8192 #change to 2048 for 8gb VRAM
+# MAX_CHAT_HISTORY_LENGTH = 16384 #change to 2048 for 8gb VRAM
 
 # Check if TOKEN is set in .env file
 if not os.getenv('TOKEN'):
@@ -41,7 +42,6 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    print(context)
     print(message.author)
     print(message.content)
     chat_history = chatHistory.load_chat_history(message.author, character.name)
@@ -53,12 +53,18 @@ async def on_message(message):
         return
 
     # Send the prompt to the API endpoint and get the response
-    prompt = f"{message.author.name}: {message.content}\n{character.name}: "
-    prompt = context + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" + prompt
+    prompt = f"{message.author.display_name}: {message.content}\n{character.name}: "
+    #prompt = context + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" + prompt
+    prompt = context + chat_history + "\n" + prompt
     response = requests.post(
         API_ENDPOINT,
         headers=headers,
-        json={"prompt": prompt, "max_length": 200, "singleline": True, "stopping_strings": ["\n","</p>"]}
+        json={
+            "prompt": prompt,
+            "max_length": 200,
+            "singleline": True,
+            "stopping_strings": ["\n","</p>"]
+        }
     )
     response_json = response.json()
     if len(response_json["results"]) > 0:
