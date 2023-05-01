@@ -11,9 +11,11 @@ from loadCharacterCard import load_character_card
 from dotenv import load_dotenv
 load_dotenv()
 
-# MAX_CHAT_HISTORY_LENGTH = 16384 #change to 2048 for 8gb VRAM
+MODEL_MAX_TOKENS = 2048
+AVERAGE_CHARACTERS_PER_TOKEN = 3.525
+MAX_CHAT_HISTORY_LENGTH = MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9
 
-# Check if TOKEN is set in .env file
+# Check if discord token TOKEN is set in .env file
 if not os.getenv('TOKEN'):
     print("Error: You need to create a .env file with TOKEN='your-discord-token' or the bot will not work")
     exit(1)
@@ -54,19 +56,19 @@ async def on_message(message):
 
     # Send the prompt to the API endpoint and get the response
     prompt = f"{message.author.display_name}: {message.content}\n{character.name}: "
-    #prompt = context + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" + prompt
-    prompt = context + chat_history + "\n" + prompt
+    prompt = context + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" + prompt
     response = requests.post(
         API_ENDPOINT,
         headers=headers,
         json={
             "prompt": prompt,
             "max_length": 200,
-            "singleline": True,
+            "repetition_penalty": 1.2,
             "stopping_strings": ["\n","</p>"]
         }
     )
     response_json = response.json()
+    print(response_json['results'])
     if len(response_json["results"]) > 0:
         text_response = response_json["results"][0]["text"]
     else:
