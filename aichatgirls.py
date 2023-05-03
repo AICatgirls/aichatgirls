@@ -5,13 +5,14 @@
 import discord
 import requests
 import os
+import asyncio
 from datetime import datetime
 import chatHistory
 from loadCharacterCard import load_character_card
 from dotenv import load_dotenv
 load_dotenv()
 
-MODEL_MAX_TOKENS = 2048
+MODEL_MAX_TOKENS = 640#2048
 AVERAGE_CHARACTERS_PER_TOKEN = 3.525
 MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 
@@ -54,30 +55,35 @@ async def on_message(message):
     if message.author == client.user:
         return
 
-    # Send the prompt to the API endpoint and get the response
-    prompt = f"{message.author.display_name}: {message.content}\n{character.name}: "
-    prompt = context + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" + prompt
-    response = requests.post(
-        API_ENDPOINT,
-        headers=headers,
-        json={
-            "prompt": prompt,
-            "max_length": 200,
-            "repetition_penalty": 1.2,
-            "stopping_strings": ["\n","</p>"]
-        }
-    )
-    response_json = response.json()
-    print(response_json['results'])
-    if len(response_json["results"]) > 0:
-        text_response = response_json["results"][0]["text"]
-    else:
-        text_response = "Sorry, I couldn't generate a response."
+    # Show "typing" status while generating response
+    async with message.channel.typing():
+        # Send the prompt to the API endpoint and get the response
+        prompt = f"{message.author.display_name}: {message.content}\n{character.name}: "
+        prompt = context + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" + prompt
+        response = requests.post(
+            API_ENDPOINT,
+            headers=headers,
+            json={
+                "prompt": prompt,
+                "max_length": 200,
+                "stopping_strings": ["\n","</p>"]
+            }
+        )
+        # Keep checking if response has been received
+        response_json = None
+        while not response_json:
+            response_json = response.json()
+            if len(response_json["results"]) > 0:
+                text_response = response_json["results"][0]["text"]
+            else:
+                text_response = "Sorry, I couldn't generate a response."
+            await asyncio.sleep(1) # wait for 1 second before checking again
 
     # Append the original message and text response to the chat history
     chat_history += f"\n{message.author.name}: {message.content}\n{character.name}: {text_response}"
     chatHistory.save_chat_history(chat_history)
     
     await message.channel.send(text_response)
+
 
 client.run(DISCORD_TOKEN)
