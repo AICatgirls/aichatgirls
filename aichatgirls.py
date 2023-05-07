@@ -12,7 +12,7 @@ from loadCharacterCard import load_character_card
 from dotenv import load_dotenv
 load_dotenv()
 
-MODEL_MAX_TOKENS = 640#2048
+MODEL_MAX_TOKENS = 2048
 AVERAGE_CHARACTERS_PER_TOKEN = 3.525
 MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 
@@ -24,7 +24,7 @@ if not os.getenv('TOKEN'):
 # Set up Discord bot token and API endpoint URL
 DISCORD_TOKEN = os.getenv('TOKEN')
 API_ENDPOINT = "http://127.0.0.1:5000/api/v1/generate"
-client = discord.Client(intents=discord.Intents.default())
+client = discord.Client(intents=discord.Intents.all())
 
 # Set up headers and payload for HTTP request
 headers = {
@@ -45,45 +45,51 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    print(message.author)
-    print(message.content)
-    chat_history = chatHistory.load_chat_history(message.author, character.name)
-    if chat_history == "":
-        chat_history = character.mes_example + character.first_mes
-    
-    # Ignore messages sent by the bot
-    if message.author == client.user:
-        return
+    print(message)
+    if message.content:
+        chat_history = chatHistory.load_chat_history(message.author, character.name)
+        if chat_history == "":
+            chat_history = character.mes_example + character.first_mes
+        # Ignore messages sent by the bot
+        if message.author == client.user:
+            return
 
-    # Show "typing" status while generating response
-    async with message.channel.typing():
         # Send the prompt to the API endpoint and get the response
-        prompt = f"{message.author.display_name}: {message.content}\n{character.name}: "
-        prompt = context + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" + prompt
+        prompt = (context + "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" +
+            f"{message.author.display_name}: {message.content}\n" +
+            f"{character.name}: ")
+        print(prompt)
         response = requests.post(
             API_ENDPOINT,
             headers=headers,
             json={
                 "prompt": prompt,
                 "max_length": 200,
-                "stopping_strings": ["\n","</p>"]
+                "stopping_strings": ["\n"]
             }
         )
+        
         # Keep checking if response has been received
         response_json = None
         while not response_json:
-            response_json = response.json()
-            if len(response_json["results"]) > 0:
-                text_response = response_json["results"][0]["text"]
-            else:
-                text_response = "Sorry, I couldn't generate a response."
-            await asyncio.sleep(1) # wait for 1 second before checking again
+            # Show "typing" status while generating response
+            async with message.channel.typing():
+                response_json = response.json()
+                if len(response_json["results"]) > 0:
+                    text_response = response_json["results"][0]["text"]
+                else:
+                    text_response = "Sorry, I couldn't generate a response."
+                await asyncio.sleep(1) # wait for 1 second before checking again
 
-    # Append the original message and text response to the chat history
-    chat_history += f"\n{message.author.name}: {message.content}\n{character.name}: {text_response}"
-    chatHistory.save_chat_history(chat_history)
-    
-    await message.channel.send(text_response)
+        # Append the original message and text response to the chat history
+        chat_history += f"\n{message.author.name}: {message.content}\n{character.name}: {text_response}"
+        chatHistory.save_chat_history(chat_history)
 
-
+        if isinstance(message.channel, discord.DMChannel):
+            await message.author.send(text_response)
+        else:
+            await message.channel.send(text_response)
+    else:
+        return
+        
 client.run(DISCORD_TOKEN)
