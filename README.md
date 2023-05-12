@@ -21,3 +21,4 @@ Start aichatgirls `python aichatgirls.py`
 
 ## Running
 Messages you send to the discord bot will now be sent to oobabooga's text-generation-webui and answers returned
+You can type `!help` in the discord chat to get a list of bot commands. Typing `!reset` will clear your history with the bod.

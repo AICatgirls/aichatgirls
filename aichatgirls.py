@@ -8,6 +8,7 @@ import os
 import asyncio
 from datetime import datetime
 import chatHistory
+import chatCommand
 from loadCharacterCard import load_character_card
 from dotenv import load_dotenv
 load_dotenv()
@@ -47,48 +48,53 @@ async def on_ready():
 async def on_message(message):
     print(message)
     if message.content:
-        chat_history = chatHistory.load_chat_history(message.author, character.name)
-        if chat_history == "":
-            chat_history = character.mes_example + character.first_mes
-        # Ignore messages sent by the bot
-        if message.author == client.user:
+        if message.content.startswith("!"):
+            command = message.content.split(" ")[0]
+            text_response = chatCommand.chat_command(command, message, character)
+            if isinstance(message.channel, discord.DMChannel):
+                await message.author.send(text_response)
+            else:
+                await message.channel.send(text_response)
+        elif message.author == client.user:
             return
-
-        # Send the prompt to the API endpoint and get the response
-        prompt = (context + "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" +
-            f"{message.author.display_name}: {message.content}\n" +
-            f"{character.name}: ")
-        print(prompt)
-        response = requests.post(
-            API_ENDPOINT,
-            headers=headers,
-            json={
-                "prompt": prompt,
-                "max_length": 200,
-                "stopping_strings": ["\n"]
-            }
-        )
-        
-        # Keep checking if response has been received
-        response_json = None
-        while not response_json:
-            # Show "typing" status while generating response
-            async with message.channel.typing():
-                response_json = response.json()
-                if len(response_json["results"]) > 0:
-                    text_response = response_json["results"][0]["text"]
-                else:
-                    text_response = "Sorry, I couldn't generate a response."
-                await asyncio.sleep(1) # wait for 1 second before checking again
-
-        # Append the original message and text response to the chat history
-        chat_history += f"\n{message.author.name}: {message.content}\n{character.name}: {text_response}"
-        chatHistory.save_chat_history(chat_history)
-
-        if isinstance(message.channel, discord.DMChannel):
-            await message.author.send(text_response)
         else:
-            await message.channel.send(text_response)
+            chat_history = chatHistory.load_chat_history(message.author, character)
+
+            # Send the prompt to the API endpoint and get the response
+            prompt = (context + "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" +
+                f"{message.author.display_name}: {message.content}\n" +
+                f"{character.name}: ")
+            print(prompt)
+            response = requests.post(
+                API_ENDPOINT,
+                headers=headers,
+                json={
+                    "prompt": prompt,
+                    "max_length": 200,
+                    "stopping_strings": ["\n"]
+                }
+            )
+            
+            # Keep checking if response has been received
+            response_json = None
+            while not response_json:
+                # Show "typing" status while generating response
+                async with message.channel.typing():
+                    response_json = response.json()
+                    if len(response_json["results"]) > 0:
+                        text_response = response_json["results"][0]["text"]
+                    else:
+                        text_response = "Sorry, I couldn't generate a response."
+                    await asyncio.sleep(1) # wait for 1 second before checking again
+
+            # Append the original message and text response to the chat history
+            chat_history += f"\n{message.author.name}: {message.content}\n{character.name}: {text_response}"
+            chatHistory.save_chat_history(chat_history)
+
+            if isinstance(message.channel, discord.DMChannel):
+                await message.author.send(text_response)
+            else:
+                await message.channel.send(text_response)
     else:
         return
         
