@@ -13,9 +13,9 @@ from loadCharacterCard import load_character_card
 from dotenv import load_dotenv
 load_dotenv()
 
-MODEL_MAX_TOKENS = 2048
+MODEL_MAX_TOKENS = 8000
 AVERAGE_CHARACTERS_PER_TOKEN = 3.525
-MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
+MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.8)
 
 # Check if discord token TOKEN is set in .env file
 if not os.getenv('TOKEN'):
@@ -65,13 +65,14 @@ async def on_message(message):
                 f"{message.author.display_name}: {message.content}\n" +
                 f"{character.name}: ")
             print(prompt)
+            stopping_strings = [f"{message.author.display_name}:"]
             response = requests.post(
                 API_ENDPOINT,
                 headers=headers,
                 json={
                     "prompt": prompt,
-                    "max_length": 200,
-                    "stopping_strings": ["\n"]
+                    "max_length": 400,
+                    "stopping_strings": stopping_strings
                 }
             )
             
