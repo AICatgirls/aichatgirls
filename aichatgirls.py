@@ -1,5 +1,3 @@
-# TODO: show when the bot is "typing"
-# TODO: add "reset" command to clear chat history
 # TODO: try/except on requests, handle disconnects
 # TODO: when the chat_history gets long oobabooga cuts off the context; make sure it gets preserved
 import discord
@@ -15,7 +13,7 @@ load_dotenv()
 
 MODEL_MAX_TOKENS = 8000
 AVERAGE_CHARACTERS_PER_TOKEN = 3.525
-MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.8)
+MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 
 # Check if discord token TOKEN is set in .env file
 if not os.getenv('TOKEN'):
@@ -71,7 +69,7 @@ async def on_message(message):
                 headers=headers,
                 json={
                     "prompt": prompt,
-                    "max_length": 400,
+                    "max_length": 1200,
                     "stopping_strings": stopping_strings
                 }
             )
