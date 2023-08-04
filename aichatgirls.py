@@ -69,7 +69,7 @@ async def on_message(message):
                 headers=headers,
                 json={
                     "prompt": prompt,
-                    "max_length": 1200,
+                    "max_length": 420,
                     "stopping_strings": stopping_strings
                 }
             )
