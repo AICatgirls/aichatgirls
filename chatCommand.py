@@ -21,6 +21,7 @@ def chat_command(command, message, character):
             " ,": ",",             # Replace space followed by a comma with just the comma
             ",.": ".",
             ".,": ",",
+            ",,": ",",
         }
         for old, new in replacements.items():
             updated_chat_history = updated_chat_history.replace(old, new)
