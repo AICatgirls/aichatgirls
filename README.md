@@ -29,6 +29,6 @@ You can type `!help` in the discord chat to get a list of bot commands. Typing `
 
 ## Settings
 Users can now alter the settings for                 
-	max_response_length (max_new_tokens) - How long in tokens the response can be.
-    temperature - A number between 0.1 and 1.9, default 1. The higher the number the more creative the response.
+	max_response_length (max_new_tokens) - How long in tokens the response can be. Default 400
+    temperature - A number between 0.1 and 1.9, default 0.5. The higher the number the more creative the response.
     repetition_penalty - A number between 0.1 and 1.9, default 1.18.
