@@ -5,35 +5,26 @@
 # TODO: Tokenize user messages to get an exact count of tokens rather than estimating it based on length
 # TODO: Command ideas: regen, undo
 
-import chatCommand
-from datetime import datetime
-import discord
-from dotenv import load_dotenv
-from generate import generate_prompt_response
-from loadCharacterCard import load_character_card
-import os
-import requests
-
-load_dotenv()
-
-MODEL_MAX_TOKENS = 8000
-AVERAGE_CHARACTERS_PER_TOKEN = 3.525
-MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 
 # Check if discord token TOKEN is set in .env file
+from dotenv import load_dotenv
+import os
+load_dotenv()
 if not os.getenv('TOKEN'):
     print("Error: You need to create a .env file with TOKEN='your-discord-token' or the bot will not work")
     exit(1)
+# ChatGPT doesn't like reading the above, so I've moved it to the top to make it easier to exclude it
+
+from chatCommand import chat_command
+from datetime import datetime
+import discord
+from generate import generate_prompt_response
+from loadCharacterCard import load_character_card
+import requests
 
 # Set up Discord bot token and API endpoint URL
 DISCORD_TOKEN = os.getenv('TOKEN')
-API_ENDPOINT = "http://127.0.0.1:5000/api/v1/generate"
 client = discord.Client(intents=discord.Intents.all())
-
-# Set up headers and payload for HTTP request
-headers = {
-    "Content-Type": "application/json"
-}
 
 character = {}
 context = ""
@@ -55,9 +46,9 @@ async def on_message(message):
     if message.content:
         if message.content.startswith("!"):
             command = message.content.split(" ")[0]
-            text_response = await handle_command(command, message)
+            text_response = chat_command(command, message, character)
         else:
-            text_response = await generate_prompt_response(message, API_ENDPOINT, headers, character, context, MAX_CHAT_HISTORY_LENGTH)
+            text_response = await generate_prompt_response(message, character, context)
 
         if isinstance(message.channel, discord.DMChannel):
             await message.author.send(text_response)
@@ -66,8 +57,5 @@ async def on_message(message):
 
     else:
         return
-
-async def handle_command(command, message):
-    return chatCommand.chat_command(command, message, character)
         
 client.run(DISCORD_TOKEN)
