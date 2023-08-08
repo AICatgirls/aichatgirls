@@ -52,6 +52,7 @@ def handle_setting_command(user_id, character, args):
         Invalid usage. Usage: !set [setting] [value]
         Valid settings are:
             max_response_length - How long the response can be. Shorter responses generate faster.
+            min_length - Force the bot to talk longer. Default 0
             temperature - A number between 0.1 and 0.9, default 0.5. The higher the number the more creative the response.
             repetition_penalty - A number between 0.1 and 1.9, default 1.18.
         """
@@ -60,14 +61,11 @@ def handle_setting_command(user_id, character, args):
     settings = load_user_settings(user_id, character.name)
 
     if setting == "max_response_length":
-        try:
-            value = int(value)
-        except ValueError:
-            return "Invalid value for 'max_response_length'. It should be a number."
-        settings["max_new_tokens"] = value
-        save_user_settings(user_id, character.name, settings)
-        return f"Setting 'max_response_length' updated to {value}"
-
+        return handle_float_setting(user_id, character.name, settings, "max_response_length", value, 1, 4000)
+    
+    elif setting == "min_length":
+        return handle_float_setting(user_id, character.name, settings, "min_length", value, 0, 4000)
+    
     elif setting == "temperature":
         return handle_float_setting(user_id, character.name, settings, "temperature", value, 0.1, 0.9)
 
@@ -78,6 +76,7 @@ def handle_setting_command(user_id, character, args):
         return """
         Invalid setting. Valid settings are:
             max_response_length - How long the response can be. Shorter responses generate faster.
+            min_length - Force the bot to talk longer. Default 0
             temperature - A number between 0.1 and 0.9, default 0.5. The higher the number the more creative the response.
             repetition_penalty - A number between 0.1 and 1.9, default 1.18.
         """

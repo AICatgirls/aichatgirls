@@ -5,6 +5,7 @@ This is my first project ever. Any suggestions or contributions are welcome!
 
 ## New Features
 
+8/7/2023 - Bots can now produce discord messages longer than 2000 characters by splitting the response into multiple messages
 8/4/2023 - Added a `!remove <string>` command to remove a string from the bot's memory.
 
 ## Install
@@ -30,5 +31,6 @@ You can type `!help` in the discord chat to get a list of bot commands. Typing `
 ## Settings
 Users can now alter the settings for                 
 * max_response_length (max_new_tokens) - How long in tokens the response can be. Default 400
+* min_length - How long you want the responses to be. Default 0
 * temperature - A number between 0.1 and 1.9, default 0.5. The higher the number the more creative the response.
 * repetition_penalty - A number between 0.1 and 1.9, default 1.18.

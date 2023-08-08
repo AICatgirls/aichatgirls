@@ -50,10 +50,13 @@ async def on_message(message):
         else:
             text_response = await generate_prompt_response(message, character, context)
 
-        if isinstance(message.channel, discord.DMChannel):
-            await message.author.send(text_response)
-        else:
-            await message.channel.send(text_response)
+        # If response is longer than 2000 characters, split and send multiple messages
+        chunks = [text_response[i:i + 2000] for i in range(0, len(text_response), 2000)]
+        for chunk in chunks:
+            if isinstance(message.channel, discord.DMChannel):
+                await message.author.send(chunk)
+            else:
+                await message.channel.send(chunk)
 
     else:
         return

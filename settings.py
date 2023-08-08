@@ -16,6 +16,7 @@ def load_user_settings(user_id, character_name):
         # Return default settings if the settings file doesn't exist
         return {
             "max_new_tokens": 400,
+            "min_length": 0,
             "temperature": 0.5,
             "repetition_penalty": 1.18,
         }

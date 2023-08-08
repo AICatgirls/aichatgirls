@@ -20,6 +20,7 @@ async def generate_prompt_response(message, character, context):
         json={
             "prompt": prompt,
             "max_new_tokens": user_settings["max_new_tokens"],
+            "min_length": user_settings["min_length"],
             "temperature": user_settings["temperature"],
             "repetition_penalty": user_settings["repetition_penalty"],
             "stopping_strings": [f"{message.author.display_name}:"]
