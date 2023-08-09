@@ -11,19 +11,21 @@ MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 
 async def generate_prompt_response(message, character, context):
     chat_history = chatHistory.load_chat_history(message.author, character)
     user_settings = settings.load_user_settings(message.author, character.name)
-    prompt = (context + "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + "\n" +
-              f"{message.author.display_name}: {message.content}\n" +
-              f"{character.name}: ")
+    prompt = (context + 
+              "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + 
+              "\n" + message.author.display_name + ": " + message.content +
+              "\n" + character.name + ":" + user_settings["prefix"] + " ")
     response = requests.post(
         API_ENDPOINT,
         headers={"Content-Type": "application/json"},
         json={
             "prompt": prompt,
-            "max_new_tokens": user_settings["max_new_tokens"],
+            "max_new_tokens": user_settings["max_response_length"],
             "min_length": user_settings["min_length"],
             "temperature": user_settings["temperature"],
             "repetition_penalty": user_settings["repetition_penalty"],
-            "stopping_strings": [f"{message.author.display_name}:"]
+            "stopping_strings": [f"{message.author.display_name}:"],
+            "add_bos_token": False,
         }
     )
     print(prompt)

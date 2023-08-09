@@ -10,7 +10,7 @@ def chat_command(command, message, character):
         return remove_string_from_chat_history(message.author, character, string_to_remove)
 
     elif command.startswith("!set"):
-        return handle_setting_command(message.author, character, message.content.split(" ")[1:])
+        return handle_setting_command(message.author, character, message.content.split(" ", 2))
 
     else:
         return """
@@ -31,55 +31,73 @@ def remove_string_from_chat_history(user_id, character, string_to_remove):
 
     # Clean up punctuation and double spaces
     replacements = {
-        "  ": " ",             # Replace multiple spaces with a single space
-        " .": ".",             # Replace space followed by a period with just the period
-        " ,": ",",             # Replace space followed by a comma with just the comma
+        "  ": " ",
+        " .": ".",
+        " ,": ",",
         ",.": ".",
         ".,": ",",
         ",,": ",",
     }
     for old, new in replacements.items():
         updated_chat_history = updated_chat_history.replace(old, new)
-    for old, new in replacements.items():  # I'm being lazy and just running it twice, rather than adding additional permutations
+    for old, new in replacements.items():
         updated_chat_history = updated_chat_history.replace(old, new)
 
     chatHistory.save_chat_history(updated_chat_history)
     return f"All instances of '{string_to_remove}' have been removed from the chat history."
 
 def handle_setting_command(user_id, character, args):
-    if len(args) != 2:
+    if len(args) < 2:
         return """
         Invalid usage. Usage: !set [setting] [value]
         Valid settings are:
-            max_response_length - How long the response can be. Shorter responses generate faster.
-            min_length - Force the bot to talk longer. Default 0
-            temperature - A number between 0.1 and 0.9, default 0.5. The higher the number the more creative the response.
-            repetition_penalty - A number between 0.1 and 1.9, default 1.18.
+        max_response_length - How long the response can be. Shorter responses generate faster.
+        min_length - Force the bot to talk longer. Default 1
+        temperature - A number between 0.1 and 1.0, default 0.5. The higher the number the more creative the response.
+        repetition_penalty - A number between 0.1 and 1.9, default 1.18.
+        prefix - A hidden phrase that the bot will silently say before giving a response
         """
 
-    setting, value = args
+    setting = args[1]
+    value = args[2] if len(args) > 2 else None  # Check if value is provided
     settings = load_user_settings(user_id, character.name)
+    default_settings = {
+        "max_response_length": 400,
+        "min_length": 1,
+        "temperature": 0.5,
+        "repetition_penalty": 1.18,
+        "prefix": ' ',
+    }
 
-    if setting == "max_response_length":
-        return handle_float_setting(user_id, character.name, settings, "max_response_length", value, 1, 4000)
-    
-    elif setting == "min_length":
-        return handle_float_setting(user_id, character.name, settings, "min_length", value, 0, 4000)
-    
-    elif setting == "temperature":
-        return handle_float_setting(user_id, character.name, settings, "temperature", value, 0.1, 0.9)
+    if default_settings[setting] and value is None:
+        # Reset setting to default
+        settings[setting] = default_settings[setting]
+        save_user_settings(user_id, character.name, settings)
+        return f"Setting '{setting}' reset to default value of {default_settings[setting]}"
 
-    elif setting == "repetition_penalty":
-        return handle_float_setting(user_id, character.name, settings, "repetition_penalty", value, 0.1, 1.9)
+    elif default_settings[setting]:
+        old_value = settings.get(setting, "not set")
+        new_value = value
+        return (
+            handle_float_setting(user_id, character.name, settings, setting, new_value, *default_range(setting))
+            if is_float_setting(setting)
+            else handle_string_setting(user_id, character.name, settings, setting, new_value, default_settings[setting])
+        )
 
     else:
-        return """
-        Invalid setting. Valid settings are:
-            max_response_length - How long the response can be. Shorter responses generate faster.
-            min_length - Force the bot to talk longer. Default 0
-            temperature - A number between 0.1 and 0.9, default 0.5. The higher the number the more creative the response.
-            repetition_penalty - A number between 0.1 and 1.9, default 1.18.
-        """
+        return "Invalid setting. Valid settings are:\n" + "\n".join(default_settings.keys())
+
+def default_range(setting_name):
+    ranges = {
+        "max_response_length": (1, 4000),
+        "min_length": (1, 4000),
+        "temperature": (0.1, 1.0),
+        "repetition_penalty": (0.1, 1.9),
+    }
+    return ranges.get(setting_name, (0, 0))
+
+def is_float_setting(setting_name):
+    return setting_name in ["max_response_length", "min_length", "temperature", "repetition_penalty"]
 
 def handle_float_setting(user_id, character_name, settings, setting_name, value, min_value, max_value):
     try:
@@ -88,6 +106,22 @@ def handle_float_setting(user_id, character_name, settings, setting_name, value,
             raise ValueError
     except ValueError:
         return f"Invalid value for '{setting_name}'. It should be a number between {min_value} and {max_value}."
+
+    old_value = settings.get(setting_name, "not set")
     settings[setting_name] = value
     save_user_settings(user_id, character_name, settings)
-    return f"Setting '{setting_name}' updated to {value}"
+    
+    if old_value != "not set":
+        return f"Setting '{setting_name}' updated from {old_value} to {value}"
+    else:
+        return f"Setting '{setting_name}' set to {value}"
+
+def handle_string_setting(user_id, character_name, settings, setting_name, value, default_value):
+    old_value = settings.get(setting_name, "not set")
+    settings[setting_name] = value
+    save_user_settings(user_id, character_name, settings)
+
+    if old_value != "not set":
+        return f"Setting '{setting_name}' updated from '{old_value}' to '{value}'"
+    else:
+        return f"Setting '{setting_name}' set to '{value}'"
