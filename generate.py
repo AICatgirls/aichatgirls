@@ -9,7 +9,7 @@ AVERAGE_CHARACTERS_PER_TOKEN = 3.525
 MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 
 async def generate_prompt_response(message, character, context):
-    chat_history = chatHistory.load_chat_history(message.author, character)
+    chat_history = chatHistory.EncryptedChatHistory(message.author, character.name).load()
     user_settings = settings.load_user_settings(message.author, character.name)
     prompt = (context + 
               "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + 
@@ -28,19 +28,21 @@ async def generate_prompt_response(message, character, context):
             "add_bos_token": False,
         }
     )
-    print(prompt)
-    print(message.author.display_name)
+    print(f"Incoming message from {message.author.display_name}")
     response_json = None
     while not response_json:
         response_json = response.json()
         if len(response_json["results"]) > 0:
+            print(f"Response received for {message.author.display_name}")
             text_response = response_json["results"][0]["text"]
         else:
             text_response = "Sorry, I couldn't generate a response."
         await asyncio.sleep(1)  # wait for 1 second before checking again
         
     # Append the original message and text response to the chat history
-    chat_history += f"\n{message.author.name}: {message.content}\n{character.name}: {text_response}"
-    chatHistory.save_chat_history(chat_history)
+    updated_chat_history = (
+        chat_history + f"\n{message.author.name}: {message.content}\n{character.name}: {text_response}"
+    )
+    chatHistory.EncryptedChatHistory(message.author, character.name).save(updated_chat_history)
     settings.save_user_settings(message.author, character.name, user_settings)
     return text_response

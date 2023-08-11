@@ -18,8 +18,9 @@ if not os.getenv('TOKEN'):
 from chatCommand import chat_command
 from datetime import datetime
 import discord
+import encryption
 from generate import generate_prompt_response
-from loadCharacterCard import load_character_card
+import loadCharacterCard
 import requests
 
 # Set up Discord bot token and API endpoint URL
@@ -34,9 +35,9 @@ async def on_ready():
     global character
     global context
     print('Logged in as {0.user}'.format(client))
-    character = load_character_card(client.user.name)
+    character = loadCharacterCard.load_character_card(client.user.name)
     context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}\n"
-    print(context)
+    encryption.get_or_generate_key()
 
 @client.event
 async def on_message(message):
