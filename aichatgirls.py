@@ -1,10 +1,12 @@
 # TODO: try/except on requests, handle disconnects
-# TODO: Allow user configurable max response length,
-#       Send multiple messages if it exceeds discord's 2000 character length
-# TODO: Make temperature a user configurable setting
 # TODO: Tokenize user messages to get an exact count of tokens rather than estimating it based on length
 # TODO: Command ideas: regen, undo
-
+# TODO: Scheduled messages
+# TODO: On/off switch for chatting in channels
+# TODO: Group chat mode where history is shared by the channel
+# TODO: Image generator/image interpreter
+# TODO: Delete DM history
+# TODO: Text to speech
 
 # Check if discord token TOKEN is set in .env file
 from dotenv import load_dotenv
@@ -45,7 +47,7 @@ async def on_message(message):
         return
     print(message)
     if message.content:
-        if message.content.startswith("!"):
+        if message.content.startswith("/"):
             command = message.content.split(" ")[0]
             text_response = chat_command(command, message, character)
         else:

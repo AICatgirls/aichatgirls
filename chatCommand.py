@@ -2,23 +2,23 @@ from chatHistory import EncryptedChatHistory
 from settings import load_user_settings, save_user_settings
 
 def chat_command(command, message, character):
-    if command == "!reset":
+    if command == "/reset":
         return reset_chat_history(message.author, character.name)
 
-    elif command.startswith("!remove"):
+    elif command.startswith("/remove"):
         string_to_remove = message.content.replace(command, "").strip()
         return remove_string_from_chat_history(message.author, character.name, string_to_remove)
 
-    elif command.startswith("!set"):
+    elif command.startswith("/set"):
         return handle_setting_command(message.author, character, message.content.split(" ", 2))
 
     else:
         return """
         Available commands:
-        !reset - Resets chat history.
-        !remove [text] - Removes all instances of [text] from chat history.
-        !set [setting] [value] - Changes user settings
-        !help - Shows list of available commands.
+        /reset - Resets chat history.
+        /remove [text] - Removes all instances of [text] from chat history.
+        /set [setting] [value] - Changes user settings
+        /help - Shows list of available commands.
         """
 
 def reset_chat_history(user_id, character_name):
@@ -49,7 +49,7 @@ def remove_string_from_chat_history(user_id, character_name, string_to_remove):
 def handle_setting_command(user_id, character, args):
     if len(args) < 2:
         return """
-        Invalid usage. Usage: !set [setting] [value]
+        Invalid usage. Usage: /set [setting] [value]
         Valid settings are:
         max_response_length - How long the response can be. Shorter responses generate faster.
         min_length - Force the bot to talk longer. Default 1
