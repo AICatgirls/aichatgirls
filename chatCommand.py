@@ -7,7 +7,7 @@ def chat_command(command, message, character):
 
     elif command.startswith("!remove"):
         string_to_remove = message.content.replace(command, "").strip()
-        return remove_string_from_chat_history(message.author, character, string_to_remove)
+        return remove_string_from_chat_history(message.author, character.name, string_to_remove)
 
     elif command.startswith("!set"):
         return handle_setting_command(message.author, character, message.content.split(" ", 2))
@@ -22,11 +22,11 @@ def chat_command(command, message, character):
         """
 
 def reset_chat_history(user_id, character_name):
-    chatHistory.reset_chat_history(user_id, character_name)
+    chatHistory.EncryptedChatHistory(user_id, character_name).reset()
     return "Chat history has been reset."
 
-def remove_string_from_chat_history(user_id, character, string_to_remove):
-    chat_history = chatHistory.load_chat_history(user_id, character)
+def remove_string_from_chat_history(user_id, character_name, string_to_remove):
+    chat_history = chatHistory.EncryptedChatHistory(user_id, character_name).load()
     updated_chat_history = chat_history.replace(string_to_remove, "")
 
     # Clean up punctuation and double spaces
@@ -43,7 +43,7 @@ def remove_string_from_chat_history(user_id, character, string_to_remove):
     for old, new in replacements.items():
         updated_chat_history = updated_chat_history.replace(old, new)
 
-    chatHistory.save_chat_history(updated_chat_history)
+    chatHistory.EncryptedChatHistory(user_id, character_name).save(updated_chat_history)
     return f"All instances of '{string_to_remove}' have been removed from the chat history."
 
 def handle_setting_command(user_id, character, args):

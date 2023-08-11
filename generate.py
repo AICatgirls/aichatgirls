@@ -9,7 +9,7 @@ AVERAGE_CHARACTERS_PER_TOKEN = 3.525
 MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 
 async def generate_prompt_response(message, character, context):
-    chat_history = chatHistory.load_chat_history(message.author, character)
+    chat_history = chatHistory.EncryptedChatHistory(message.author, character.name).load()
     user_settings = settings.load_user_settings(message.author, character.name)
     prompt = (context + 
               "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + 
@@ -40,7 +40,9 @@ async def generate_prompt_response(message, character, context):
         await asyncio.sleep(1)  # wait for 1 second before checking again
         
     # Append the original message and text response to the chat history
-    chat_history += f"\n{message.author.name}: {message.content}\n{character.name}: {text_response}"
-    chatHistory.save_chat_history(chat_history)
+    updated_chat_history = (
+        chat_history + f"\n{message.author.name}: {message.content}\n{character.name}: {text_response}"
+    )
+    chatHistory.EncryptedChatHistory(message.author, character.name).save(updated_chat_history)
     settings.save_user_settings(message.author, character.name, user_settings)
     return text_response
