@@ -5,9 +5,11 @@ This is my first project ever. Any suggestions or contributions are welcome!
 
 ## New Features
 
+8/11/2023 - Chat history is now encrypted. ChatCommands now start with / instead of !.
+
 8/7/2023 - Bots can now produce discord messages longer than 2000 characters by splitting the response into multiple messages
 
-8/4/2023 - Added a `!remove <string>` command to remove a string from the bot's memory.
+8/4/2023 - Added a `/remove <string>` command to remove a string from the bot's memory.
 
 ## Install
 1. `git clone https://github.com/AICatgirls/aichatgirls.git`
@@ -27,10 +29,10 @@ Start aichatgirls `python aichatgirls.py`
 
 ## Running
 Messages you send to the discord bot will now be sent to oobabooga's text-generation-webui and answers returned
-You can type `!help` in the discord chat to get a list of bot commands. Typing `!reset` will clear your history with the bod. Typing `!remove <string>` will remove the specified string from the bot's memory.
+You can type `/help` in the discord chat to get a list of bot commands. Typing `/reset` will clear your history with the bod. Typing `/remove <string>` will remove the specified string from the bot's memory.
 
 ## Settings
-Users can now alter the settings for                 
+Users can now alter bot settings. Usage `/set [setting] [value]` or `/set [setting]` to reset a setting to default
 * max_response_length (max_new_tokens) - How long in tokens the response can be. Default 400
 * min_length - How long you want the responses to be. Default 0
 * temperature - A number between 0.1 and 1.9, default 0.5. The higher the number the more creative the response.
