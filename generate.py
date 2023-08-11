@@ -28,12 +28,12 @@ async def generate_prompt_response(message, character, context):
             "add_bos_token": False,
         }
     )
-    print(prompt)
-    print(message.author.display_name)
+    print(f"Incoming message from {message.author.display_name}")
     response_json = None
     while not response_json:
         response_json = response.json()
         if len(response_json["results"]) > 0:
+            print(f"Response received for {message.author.display_name}")
             text_response = response_json["results"][0]["text"]
         else:
             text_response = "Sorry, I couldn't generate a response."
