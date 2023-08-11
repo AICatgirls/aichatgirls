@@ -5,9 +5,11 @@ This is my first project ever. Any suggestions or contributions are welcome!
 
 ## New Features
 
+8/11/2023 - Chat history is now encrypted. ChatCommands now start with / instead of !.
+
 8/7/2023 - Bots can now produce discord messages longer than 2000 characters by splitting the response into multiple messages
 
-8/4/2023 - Added a `!remove <string>` command to remove a string from the bot's memory.
+8/4/2023 - Added a `/remove <string>` command to remove a string from the bot's memory.
 
 ## Install
 1. `git clone https://github.com/AICatgirls/aichatgirls.git`
