@@ -24,10 +24,12 @@ import encryption
 from generate import generate_prompt_response
 import loadCharacterCard
 import requests
+from scripts.whitelist import Whitelist
 
 # Set up Discord bot token and API endpoint URL
 DISCORD_TOKEN = os.getenv('TOKEN')
 client = discord.Client(intents=discord.Intents.all())
+whitelist = Whitelist()
 
 character = {}
 context = ""
@@ -45,12 +47,13 @@ async def on_ready():
 async def on_message(message):
     if message.author == client.user:
         return
-    print(message)
     if message.content:
         if message.content.startswith("/"):
             command = message.content.split(" ")[0]
             text_response = chat_command(command, message, character)
         else:
+            if not whitelist.is_channel_whitelisted(message.channel):
+                return
             text_response = await generate_prompt_response(message, character, context)
 
         # If response is longer than 2000 characters, split and send multiple messages

@@ -1,8 +1,33 @@
 from chatHistory import EncryptedChatHistory
 from settings import load_user_settings, save_user_settings
+from scripts.whitelist import Whitelist
+
+whitelist = Whitelist()
 
 def chat_command(command, message, character):
-    if command == "/reset":
+    if command == "/whitelist":
+        whitelist.add_channel(message.channel.id)
+        return f"This channel ({message.channel.name}) has been whitelisted."
+        
+    elif command == "/help":
+        return """
+        Available commands:
+            /whitelist - allows bot to speak in this channel
+            /blacklist - prevents bot from speaking in this channel
+            /reset - Resets chat history.
+            /remove [text] - Removes all instances of [text] from chat history.
+            /set [setting] [value] - Changes user settings
+            /help - Shows list of available commands.
+        """
+        
+    elif not whitelist.is_channel_whitelisted(message.channel):
+        return
+
+    elif command == "/blacklist":
+        whitelist.remove_channel(message.channel.id)
+        return f"This channel ({message.channel.name}) has been removed from the whitelist."
+        
+    elif command == "/reset":
         return reset_chat_history(message.author, character.name)
 
     elif command.startswith("/remove"):
@@ -15,10 +40,12 @@ def chat_command(command, message, character):
     else:
         return """
         Available commands:
-        /reset - Resets chat history.
-        /remove [text] - Removes all instances of [text] from chat history.
-        /set [setting] [value] - Changes user settings
-        /help - Shows list of available commands.
+            /whitelist - allows bot to speak in this channel
+            /blacklist - prevents bot from speaking in this channel
+            /reset - Resets chat history.
+            /remove [text] - Removes all instances of [text] from chat history.
+            /set [setting] [value] - Changes user settings
+            /help - Shows list of available commands.
         """
 
 def reset_chat_history(user_id, character_name):
@@ -51,11 +78,11 @@ def handle_setting_command(user_id, character, args):
         return """
         Invalid usage. Usage: /set [setting] [value]
         Valid settings are:
-        max_response_length - How long the response can be. Shorter responses generate faster.
-        min_length - Force the bot to talk longer. Default 1
-        temperature - A number between 0.1 and 1.0, default 0.5. The higher the number the more creative the response.
-        repetition_penalty - A number between 0.1 and 1.9, default 1.18.
-        prefix - A hidden phrase that the bot will silently say before giving a response
+            max_response_length - How long the response can be. Shorter responses generate faster.
+            min_length - Force the bot to talk longer. Default 1
+            temperature - A number between 0.1 and 1.0, default 0.5. The higher the number the more creative the response.
+            repetition_penalty - A number between 0.1 and 1.9, default 1.18.
+            prefix - A hidden phrase that the bot will silently say before giving a response
         """
 
     setting = args[1]
