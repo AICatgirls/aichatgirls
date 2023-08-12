@@ -15,7 +15,6 @@ async def generate_prompt_response(message, character, context):
               "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + 
               "\n" + message.author.display_name + ": " + message.content +
               "\n" + character.name + ":" + user_settings["prefix"] + " ")
-    print(prompt)
     response = requests.post(
         API_ENDPOINT,
         headers={"Content-Type": "application/json"},
