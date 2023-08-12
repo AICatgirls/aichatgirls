@@ -9,12 +9,13 @@ AVERAGE_CHARACTERS_PER_TOKEN = 3.525
 MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 
 async def generate_prompt_response(message, character, context):
-    chat_history = chatHistory.EncryptedChatHistory(message.author, character.name).load()
+    chat_history = chatHistory.EncryptedChatHistory(message.author, character.name).load(character)
     user_settings = settings.load_user_settings(message.author, character.name)
     prompt = (context + 
               "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + 
               "\n" + message.author.display_name + ": " + message.content +
               "\n" + character.name + ":" + user_settings["prefix"] + " ")
+    print(prompt)
     response = requests.post(
         API_ENDPOINT,
         headers={"Content-Type": "application/json"},
