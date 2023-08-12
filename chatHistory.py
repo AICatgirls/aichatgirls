@@ -24,7 +24,7 @@ class EncryptedChatHistory:
                     # Decryption failed, consider the file plaintext
                     decrypted_data = encrypted_data.decode("utf-8")
         else:
-            decrypted_data = character.mes_example + character.first_mes
+            decrypted_data = character.first_mes + character.mes_example
 
         return decrypted_data
 
