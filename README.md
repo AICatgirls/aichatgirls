@@ -28,8 +28,9 @@ Start Oobabooga's text-generation-webui (start-webui.bat)
 Start aichatgirls `python aichatgirls.py`
 
 ## Running
-Messages you send to the discord bot will now be sent to oobabooga's text-generation-webui and answers returned
-You can type `/help` in the discord chat to get a list of bot commands. Typing `/reset` will clear your history with the bod. Typing `/remove <string>` will remove the specified string from the bot's memory.
+Messages you send to the discord bot will now be sent to oobabooga's text-generation-webui and answers returned. To use the bot in a chat channel make sure it has permission and type `/whitelist`.
+
+You can type `/help` in the discord chat to get a list of bot commands, and `/set` to get a list of settings.
 
 ## Settings
 Users can now alter bot settings. Usage `/set [setting] [value]` or `/set [setting]` to reset a setting to default
