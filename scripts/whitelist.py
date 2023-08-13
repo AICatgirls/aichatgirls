@@ -28,4 +28,5 @@ class Whitelist:
             self.save_whitelist()
 
     def is_channel_whitelisted(self, channel):
+        self.whitelist = self.load_whitelist()
         return channel.id in self.whitelist or isinstance(channel, discord.DMChannel)
