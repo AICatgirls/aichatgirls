@@ -14,7 +14,7 @@ async def generate_prompt_response(message, character, context):
     prompt = (context + 
               "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + 
               "\n" + message.author.display_name + ": " + message.content +
-              "\n" + character.name + ":" + user_settings["prefix"] + " ")
+              "\n" + character.name + ":" + user_settings["prefix"]).lstrip()
     response = requests.post(
         API_ENDPOINT,
         headers={"Content-Type": "application/json"},
@@ -34,7 +34,7 @@ async def generate_prompt_response(message, character, context):
         response_json = response.json()
         if len(response_json["results"]) > 0:
             print(f"Response received for {message.author.display_name}")
-            text_response = response_json["results"][0]["text"]
+            text_response = response_json["results"][0]["text"].lstrip()
         else:
             text_response = "Sorry, I couldn't generate a response."
         await asyncio.sleep(1)  # wait for 1 second before checking again
