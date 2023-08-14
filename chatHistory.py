@@ -39,6 +39,7 @@ class ChatHistory:
 
     def reset(self):
         if os.path.isfile(self.filename):
+            print(self.filename)
             os.remove(self.filename)
 
     def encrypt(self, data):

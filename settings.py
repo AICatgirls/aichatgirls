@@ -11,7 +11,7 @@ def load_user_settings(user_id, character_name):
     settings_path = os.path.join(SETTINGS_FOLDER, f"{user_id}_{character_name}.json")
     default_settings = {
         "max_response_length": 400,
-        "min_length": 0,
+        "min_length": 12,
         "temperature": 0.5,
         "repetition_penalty": 1.18,
         "prefix": '',

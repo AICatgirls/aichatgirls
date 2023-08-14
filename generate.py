@@ -15,7 +15,8 @@ async def generate_prompt_response(message, character, context):
     prompt = (context + 
               "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + 
               "\n" + message.author.display_name + ": " + message.content +
-              "\n" + character.name + ":" + user_settings["prefix"]).lstrip()
+              "\n" + character.name + ":" + user_settings["prefix"] + " ").lstrip()
+    print(prompt)
     response = requests.post(
         API_ENDPOINT,
         headers={"Content-Type": "application/json"},
@@ -42,7 +43,7 @@ async def generate_prompt_response(message, character, context):
         
     # Append the original message and text response to the chat history
     updated_chat_history = (
-        chat_history + f"\n{message.author.name}: {message.content}\n{character.name}: {text_response}"
+        chat_history + f"\n{message.author.display_name}: {message.content}\n{character.name}: {text_response}"
     )
     chatHistory.ChatHistory(message, character.name).save(updated_chat_history)
     settings.save_user_settings(message.author, character.name, user_settings)
