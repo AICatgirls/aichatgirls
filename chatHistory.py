@@ -1,13 +1,17 @@
 import os
 from cryptography.fernet import Fernet, InvalidToken
+import discord
 from dotenv import load_dotenv
 from encryption import get_or_generate_key
 
 load_dotenv()
 
-class EncryptedChatHistory:
-    def __init__(self, author, bot_name):
-        self.filename = f"{author}-{bot_name}.txt"
+class ChatHistory:
+    def __init__(self, message, bot_name):
+        if isinstance(message.channel, discord.DMChannel):
+            self.filename = f"{message.author}-{bot_name}.txt"
+        else:
+            self.filename = f"{message.channel.guild}-{message.channel}-{message.channel.id}.txt"
         self.cipher_suite = self.get_or_generate_cipher_suite()
 
     def get_or_generate_cipher_suite(self):

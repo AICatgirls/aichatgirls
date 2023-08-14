@@ -1,4 +1,4 @@
-from chatHistory import EncryptedChatHistory
+from chatHistory import ChatHistory
 from settings import load_user_settings, save_user_settings
 from scripts.whitelist import Whitelist
 
@@ -49,11 +49,11 @@ def chat_command(command, message, character):
         """
 
 def reset_chat_history(user_id, character_name):
-    EncryptedChatHistory(user_id, character_name).reset()
+    ChatHistory(user_id, character_name).reset()
     return "Chat history has been reset."
 
 def remove_string_from_chat_history(user_id, character_name, string_to_remove):
-    chat_history = EncryptedChatHistory(user_id, character_name).load()
+    chat_history = ChatHistory(user_id, character_name).load()
     updated_chat_history = chat_history.replace(string_to_remove, "")
 
     # Clean up punctuation and double spaces
@@ -70,7 +70,7 @@ def remove_string_from_chat_history(user_id, character_name, string_to_remove):
     for old, new in replacements.items():
         updated_chat_history = updated_chat_history.replace(old, new)
 
-    EncryptedChatHistory(user_id, character_name).save(updated_chat_history)
+    ChatHistory(user_id, character_name).save(updated_chat_history)
     return f"All instances of '{string_to_remove}' have been removed from the chat history."
 
 def handle_setting_command(user_id, character, args):
