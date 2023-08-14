@@ -28,7 +28,7 @@ def chat_command(command, message, character):
         return f"This channel ({message.channel.name}) has been removed from the whitelist."
         
     elif command == "/reset":
-        return reset_chat_history(message.author, character.name)
+        return reset_chat_history(message, character.name)
 
     elif command.startswith("/remove"):
         string_to_remove = message.content.replace(command, "").strip()
@@ -48,12 +48,12 @@ def chat_command(command, message, character):
             /help - Shows list of available commands.
         """
 
-def reset_chat_history(user_id, character_name):
-    ChatHistory(user_id, character_name).reset()
+def reset_chat_history(message, character_name):
+    ChatHistory(message, character_name).reset()
     return "Chat history has been reset."
 
-def remove_string_from_chat_history(user_id, character_name, string_to_remove):
-    chat_history = ChatHistory(user_id, character_name).load()
+def remove_string_from_chat_history(message, character_name, string_to_remove):
+    chat_history = ChatHistory(message, character_name).load()
     updated_chat_history = chat_history.replace(string_to_remove, "")
 
     # Clean up punctuation and double spaces
@@ -70,7 +70,7 @@ def remove_string_from_chat_history(user_id, character_name, string_to_remove):
     for old, new in replacements.items():
         updated_chat_history = updated_chat_history.replace(old, new)
 
-    ChatHistory(user_id, character_name).save(updated_chat_history)
+    ChatHistory(message, character_name).save(updated_chat_history)
     return f"All instances of '{string_to_remove}' have been removed from the chat history."
 
 def handle_setting_command(user_id, character, args):

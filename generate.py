@@ -2,6 +2,7 @@ import requests
 import chatHistory
 import asyncio
 import settings
+import json
 
 API_ENDPOINT="http://127.0.0.1:5000/api/v1/generate"
 MODEL_MAX_TOKENS = 8000
@@ -28,6 +29,10 @@ async def generate_prompt_response(message, character, context):
             "add_bos_token": False,
         }
     )
+    print(user_settings["max_response_length"])
+    print(user_settings["min_length"])
+    print(user_settings["temperature"])
+    print(user_settings["repetition_penalty"])
     print(f"Incoming message from {message.author.display_name}")
     response_json = None
     while not response_json:
