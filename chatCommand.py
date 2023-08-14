@@ -32,7 +32,7 @@ def chat_command(command, message, character):
 
     elif command.startswith("/remove"):
         string_to_remove = message.content.replace(command, "").strip()
-        return remove_string_from_chat_history(message.author, character.name, string_to_remove)
+        return remove_string_from_chat_history(message, character, string_to_remove)
 
     elif command.startswith("/set"):
         return handle_setting_command(message.author, character, message.content.split(" ", 2))
@@ -52,8 +52,8 @@ def reset_chat_history(message, character_name):
     ChatHistory(message, character_name).reset()
     return "Chat history has been reset."
 
-def remove_string_from_chat_history(message, character_name, string_to_remove):
-    chat_history = ChatHistory(message, character_name).load()
+def remove_string_from_chat_history(message, character, string_to_remove):
+    chat_history = ChatHistory(message, character.name).load(character)
     updated_chat_history = chat_history.replace(string_to_remove, "")
 
     # Clean up punctuation and double spaces
