@@ -10,7 +10,7 @@ AVERAGE_CHARACTERS_PER_TOKEN = 3.525
 MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 
 async def generate_prompt_response(message, character, context):
-    chat_history = chatHistory.ChatHistory(message, character.name).load(character)
+    chat_history = chatHistory.ChatHistory(message, character.name).load(character, message.author.display_name)
     user_settings = settings.load_user_settings(message.author, character.name)
     prompt = (context + 
               "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + 
@@ -28,6 +28,7 @@ async def generate_prompt_response(message, character, context):
             "repetition_penalty": user_settings["repetition_penalty"],
             "stopping_strings": [f"{message.author.display_name}:"],
             "add_bos_token": False,
+            "max_context_length": 8192,
         }
     )
     print(f"Incoming message from {message.author.display_name}")

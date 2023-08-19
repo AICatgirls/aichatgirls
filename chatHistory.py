@@ -18,7 +18,7 @@ class ChatHistory:
         encryption_key = get_or_generate_key()
         return Fernet(encryption_key)
             
-    def load(self, character):
+    def load(self, character, user):
         if os.path.isfile(self.filename):
             with open(self.filename, "rb") as f:
                 encrypted_data = f.read()
@@ -28,7 +28,9 @@ class ChatHistory:
                     # Decryption failed, consider the file plaintext
                     decrypted_data = encrypted_data.decode("utf-8")
         else:
-            decrypted_data = character.first_mes + character.mes_example
+            newHistory = character.first_mes + character.mes_example
+            personalizedNewHistory = newHistory.replace("{user}", f"{user}")
+            decrypted_data = personalizedNewHistory
 
         return decrypted_data
 
