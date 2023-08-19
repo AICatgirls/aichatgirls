@@ -40,7 +40,8 @@ async def on_ready():
     global context
     print('Logged in as {0.user}'.format(client))
     character = loadCharacterCard.load_character_card(client.user.name)
-    context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}\n"
+    context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}"
+    # context = f"{character.name}'s Persona: {character.personality}\n<START>\n[DIALOGUE HISTORY]"
     encryption.get_or_generate_key()
 
 @client.event
@@ -48,7 +49,7 @@ async def on_message(message):
     if message.author == client.user:
         return
     if message.content:
-        if message.content.startswith("/"):
+        if message.content.startswith("/"): # slash commands process first
             command = message.content.split(" ")[0]
             text_response = chat_command(command, message, character)
         else:
