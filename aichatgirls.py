@@ -34,6 +34,7 @@ whitelist = Whitelist()
 
 character = {}
 context = ""
+message_buffer = []
 
 @client.event
 async def on_ready():
@@ -61,7 +62,11 @@ async def on_message(message):
                 chat_history + f"\n{message.author.display_name}: {message.content}"
             )
             ChatHistory(message, character.name).save(updated_chat_history)
+            message_buffer.append(message.id)
             text_response = await generate_prompt_response(message, character, context, updated_chat_history)
+            if len(message_buffer) > 1:
+                message_buffer.pop(0)
+                return
 
         # If response is longer than 2000 characters, split and send multiple messages
         chunks = [text_response[i:i + 2000] for i in range(0, len(text_response), 2000)]
@@ -70,7 +75,7 @@ async def on_message(message):
                 await message.author.send(chunk)
             else:
                 await message.channel.send(chunk)
-
+        message_buffer.pop(0)
     else:
         return
         

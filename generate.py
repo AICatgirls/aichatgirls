@@ -11,7 +11,7 @@ MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 
 
 async def generate_prompt_response(message, character, context, chat_history):
     user_settings = settings.load_user_settings(message.author, character.name)
-    prompt = (context + 
+    prompt = (f"Complete the line of dialogue for {character.name}\n" + context + 
               "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + 
               "\n" + character.name + ":" + user_settings["prefix"] + " ").lstrip()
     print(prompt)
