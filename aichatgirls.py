@@ -18,6 +18,7 @@ if not os.getenv('TOKEN'):
 # ChatGPT doesn't like reading the above, so I've moved it to the top to make it easier to exclude it
 
 from chatCommand import chat_command
+from chatHistory import ChatHistory
 from datetime import datetime
 import discord
 import encryption
@@ -55,7 +56,12 @@ async def on_message(message):
         else:
             if not whitelist.is_channel_whitelisted(message.channel):
                 return
-            text_response = await generate_prompt_response(message, character, context)
+            chat_history = ChatHistory(message, character.name).load(character, message.author.display_name)
+            updated_chat_history = (
+                chat_history + f"\n{message.author.display_name}: {message.content}"
+            )
+            ChatHistory(message, character.name).save(updated_chat_history)
+            text_response = await generate_prompt_response(message, character, context, updated_chat_history)
 
         # If response is longer than 2000 characters, split and send multiple messages
         chunks = [text_response[i:i + 2000] for i in range(0, len(text_response), 2000)]
