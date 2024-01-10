@@ -13,7 +13,7 @@ This is my first project ever. Any suggestions or contributions are welcome!
 
 ## Install
 1. `git clone https://github.com/AICatgirls/aichatgirls.git`
-2. In the aichatgirls folder (`cd aichatgirls`), run `pip install -4 .\requirements.txt`
+2. In the aichatgirls folder (`cd aichatgirls`), run `pip install -r .\requirements.txt`
 3. You will need to create a discord bot
 4. Create a file named `.env` in notepad and write one line with your bot's discord token in the format `TOKEN='your-token-here'`
 5. Install oobabooga's [text-generation-webui](https://github.com/oobabooga/text-generation-webui). Make sure to add `--api` to the CMD_FLAGS.txt file.
