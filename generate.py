@@ -1,6 +1,5 @@
 import requests
 import chatHistory
-import asyncio
 import settings
 import json
 
