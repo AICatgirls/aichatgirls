@@ -53,7 +53,7 @@ def reset_chat_history(message, character_name):
     return "Chat history has been reset."
 
 def remove_string_from_chat_history(message, character, string_to_remove):
-    chat_history = ChatHistory(message, character.name).load(character)
+    chat_history = ChatHistory(message, character.name).load(character, message.author)
     updated_chat_history = chat_history.replace(string_to_remove, "")
 
     # Clean up punctuation and double spaces
@@ -70,7 +70,7 @@ def remove_string_from_chat_history(message, character, string_to_remove):
     for old, new in replacements.items():
         updated_chat_history = updated_chat_history.replace(old, new)
 
-    ChatHistory(message, character_name).save(updated_chat_history)
+    ChatHistory(message, character.name).save(updated_chat_history)
     return f"All instances of '{string_to_remove}' have been removed from the chat history."
 
 def handle_setting_command(user_id, character, args):
