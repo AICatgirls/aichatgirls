@@ -11,11 +11,11 @@ MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 
 async def generate_prompt_response(message, character, context):
     chat_history = chatHistory.ChatHistory(message, character.name).load(character, message.author.display_name)
     user_settings = settings.load_user_settings(message.author, character.name)
-    prompt = (context + 
+    prompt = (
               "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + # Limit chat history
               "\n" + message.author.display_name + ": " + message.content +
               "\n" + character.name + ":" + user_settings["prefix"] + " ").lstrip()
-    print(prompt)
+    # print(prompt) # for debugging only
     
     headers = {
         "Content-Type": "application/json",
@@ -25,9 +25,11 @@ async def generate_prompt_response(message, character, context):
     # Prepare the data for the request
     data = {
         "messages": [
-            {"role": "system", "content": context},
+            {"role": "assistant", "content": context},
             {"role": "user", "content": prompt}
         ],
+        "mode": "chat",
+        "stream": False,
         "max_tokens": user_settings["max_response_length"],
         "temperature": user_settings["temperature"],
         "min_tokens": user_settings["min_length"],

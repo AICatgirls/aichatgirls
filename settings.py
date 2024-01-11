@@ -12,7 +12,7 @@ def load_user_settings(user_id, character_name):
     default_settings = {
         "max_response_length": 400,
         "min_length": 12,
-        "temperature": 0.5,
+        "temperature": 0.4,
         "repetition_penalty": 1.18,
         "prefix": '',
     }
