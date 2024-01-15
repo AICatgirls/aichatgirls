@@ -3,7 +3,7 @@ import chatHistory
 import settings
 import json
 
-API_ENDPOINT="http://127.0.0.1:5000/v1/chat/completions"
+API_ENDPOINT="http://127.0.0.1:5000/v1/completions"
 MODEL_MAX_TOKENS = 8000
 AVERAGE_CHARACTERS_PER_TOKEN = 3.525
 MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
@@ -11,11 +11,10 @@ MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 
 async def generate_prompt_response(message, character, context):
     chat_history = chatHistory.ChatHistory(message, character.name).load(character, message.author.display_name)
     user_settings = settings.load_user_settings(message.author, character.name)
-    prompt = (
+    prompt = (context + 
               "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + # Limit chat history
               "\n" + message.author.display_name + ": " + message.content +
               "\n" + character.name + ":" + user_settings["prefix"] + " ").lstrip()
-    # print(prompt) # for debugging only
     
     headers = {
         "Content-Type": "application/json",
@@ -24,12 +23,8 @@ async def generate_prompt_response(message, character, context):
     
     # Prepare the data for the request
     data = {
-        "messages": [
-            {"role": "assistant", "content": context},
-            {"role": "user", "content": prompt}
-        ],
-        "mode": "chat",
-        "stream": False,
+        "mode": "chat-instruct",
+        "prompt": prompt,
         "max_tokens": user_settings["max_response_length"],
         "temperature": user_settings["temperature"],
         "min_tokens": user_settings["min_length"],
@@ -39,10 +34,11 @@ async def generate_prompt_response(message, character, context):
     }
     response = requests.post(API_ENDPOINT, headers=headers, json=data)
     print(f"Incoming message from {message.author.display_name}")
+    print(f"Response Status Code: {response.status_code}")  # Print status code
     
     response_json = response.json()
     if response.status_code == 200 and "choices" in response_json and len(response_json["choices"]) > 0:
-        text_response = response_json["choices"][0]["message"]["content"].strip()
+        text_response = text_response = response_json["choices"][0]["text"].strip()
     else:
         text_response = "Sorry, I couldn't generate a response."
         print(f"API response error: {response_json}")
