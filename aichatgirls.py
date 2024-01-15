@@ -1,8 +1,8 @@
 # TODO: try/except on requests, handle disconnects
 # TODO: Tokenize user messages to get an exact count of tokens rather than estimating it based on length
+#       Check the API documentation in textgen, there's an endpoint for token stuff. We also get this in responses now too I think.
 # TODO: Command ideas: regen, undo
 # TODO: Scheduled messages
-# TODO: On/off switch for chatting in channels
 # TODO: Group chat mode where history is shared by the channel
 # TODO: Image generator/image interpreter
 # TODO: Delete DM history
@@ -39,7 +39,7 @@ async def on_ready():
     global character
     global context
     print('Logged in as {0.user}'.format(client))
-    character = loadCharacterCard.load_character_card(client.user.name)
+    character = loadCharacterCard.Character.load_character_card(client.user.name)
     context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}"
     # context = f"{character.name}'s Persona: {character.personality}\n<START>\n[DIALOGUE HISTORY]"
     encryption.get_or_generate_key()
