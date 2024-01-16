@@ -40,6 +40,11 @@ async def generate_prompt_response(message, character, context):
     response_json = response.json()
     if response.status_code == 200 and "choices" in response_json and len(response_json["choices"]) > 0:
         text_response = text_response = response_json["choices"][0]["text"].strip()
+        
+        # Check if response starts with "CharacterName: " and remove it
+        character_prefix = f"{character.name}: "
+        if text_response.startswith(character_prefix):
+            text_response = text_response[len(character_prefix):].strip()
     else:
         text_response = "Sorry, I couldn't generate a response."
         print(f"API response error: {response_json}")
