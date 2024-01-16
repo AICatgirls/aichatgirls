@@ -18,7 +18,7 @@ This is my first project ever. Any suggestions or contributions are welcome!
 4. Create a file named `.env` in notepad and write one line with your bot's discord token in the format `TOKEN='your-token-here'`
 5. Install oobabooga's [text-generation-webui](https://github.com/oobabooga/text-generation-webui). Make sure to add `--api` to the CMD_FLAGS.txt file.
 
-I more or less use the Vicuna template for this chatbot. TheBloke/Wizard-Vicuna-13B-Uncensored-SuperHOT-8K-fp16 seems to work pretty well.
+Text-generation-webui should automatically set the template for your model when you load it. I use TheBloke/Wizard-Vicuna-13B-Uncensored-SuperHOT-8K-fp16 though I'm sure there are better models available these days.
  
 ##  Character cards
 Right now you have to rename your TavernAI character card to character.webp and place it into your aichatgirls folder. If you're using character cards I would love to have your feedback!
@@ -36,6 +36,6 @@ You can type `/help` in the discord chat to get a list of bot commands, and `/se
 Users can now alter bot settings. Usage `/set [setting] [value]` or `/set [setting]` to reset a setting to default
 * max_response_length (max_new_tokens) - How long in tokens the response can be. Default 400
 * min_length - How long you want the responses to be. Default 0
-* temperature - A number between 0.1 and 1.9, default 0.5. The higher the number the more creative the response.
+* temperature - A number between 0.1 and 1.9, default 0.4. The higher the number the more creative the response.
 * repetition_penalty - A number between 0.1 and 1.9, default 1.18.
 * prefix - A hidden phrase that the bot will silently say before giving a response. Default none.
