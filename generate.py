@@ -30,10 +30,11 @@ async def generate_prompt_response(message, character, context):
         "min_tokens": user_settings["min_length"],
         "repetition_penalty": user_settings["repetition_penalty"],
         "stopping_strings": [f"{message.author.display_name}:"],
+        "stop": [f"{message.author.display_name}:"],
         "max_context_length": 8192,
     }
-    response = requests.post(API_ENDPOINT, headers=headers, json=data)
     print(f"Incoming message from {message.author.display_name}")
+    response = requests.post(API_ENDPOINT, headers=headers, json=data)
     print(f"Response Status Code: {response.status_code}")  # Print status code
     
     response_json = response.json()
