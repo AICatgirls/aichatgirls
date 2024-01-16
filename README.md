@@ -24,8 +24,8 @@ Text-generation-webui should automatically set the template for your model when 
 Right now you have to rename your TavernAI character card to character.webp and place it into your aichatgirls folder. If you're using character cards I would love to have your feedback!
 
 ## Starting
-Start Oobabooga's text-generation-webui (start-webui.bat)
-Start aichatgirls `python aichatgirls.py`
+- Start Oobabooga's text-generation-webui (`start-windows.bat`, `start-linux.sh`, `start_macos.sh`, or `start_wsl.bat` depending on your OS)
+- Start aichatgirls `python aichatgirls.py`
 
 ## Running
 Messages you send to the discord bot will now be sent to oobabooga's text-generation-webui and answers returned. To use the bot in a chat channel make sure it has permission and type `/whitelist`.
