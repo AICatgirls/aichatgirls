@@ -41,7 +41,6 @@ async def on_ready():
     print('Logged in as {0.user}'.format(client))
     character = loadCharacterCard.Character.load_character_card(client.user.name)
     context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}"
-    # context = f"{character.name}'s Persona: {character.personality}\n<START>\n[DIALOGUE HISTORY]"
     encryption.get_or_generate_key()
 
 @client.event
