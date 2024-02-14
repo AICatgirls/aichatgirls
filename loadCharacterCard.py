@@ -44,14 +44,7 @@ class Character:
 
         # Create the Character instance
         character = cls(name, description, personality, first_mes, mes_example)
-
-        # Print the character's attributes for validation
-        print(f"Character Loaded:\n"
-              f"Name: {character.name}\n"
-              f"Description: {character.description}\n"
-              f"Personality: {character.personality}\n"
-              f"First Message: {character.first_mes}\n"
-              f"Message Example: {character.mes_example}")
+        print(f"Character Loaded: {character.name}\n")
 
         return character
 
