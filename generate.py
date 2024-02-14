@@ -18,7 +18,6 @@ async def generate_prompt_response(message, character, context):
     chat_history = chat_history_data["messages"]
     formatted_history = "\n".join([f"{msg['user']}: {msg['message']}" for msg in chat_history[-MAX_CHAT_HISTORY_LENGTH:]])
     prompt = (context + "\n" + formatted_history + "\n" + message.author.display_name + ": " + message.content).lstrip()
-    print(prompt)
 
     # Prepare headers for API request
     headers = {

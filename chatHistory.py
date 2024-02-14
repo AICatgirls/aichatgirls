@@ -54,12 +54,8 @@ class ChatHistory:
             return self.convert_to_json(data, character, user)
 
     def initialize_new_history(self, character, user):
-        # Preparing the default messages
         formatted_mes_example = character.mes_example.replace("{user}", f"{user}")
-        # formatted_first_mes = character.first_mes.replace("{username}", character.name)
         formatted_first_mes = character.first_mes
-
-        # Combine default messages in the desired order
         combined_default_messages = f"{formatted_mes_example}\n{formatted_first_mes}"
 
         # Use convert_to_json to create the initial chat history
