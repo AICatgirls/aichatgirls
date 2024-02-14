@@ -1,19 +1,19 @@
 import os
 
-def convert_filename(old_filename, bot_name):
+def convert_filename(old_filename, character_name):
     parts = old_filename.split('-')
     new_filename = None
     if len(parts) == 3 and old_filename.endswith('.txt'):
         # Guild-Channel-MessageID format
-        new_filename = f"{parts[0]}-{parts[1]}-{bot_name}.json"
+        new_filename = f"{parts[0]}-{parts[1]}-{character_name}.json"
     elif len(parts) == 2 and old_filename.endswith('.txt'):
         # Author-BotName format
-        new_filename = f"{parts[0]}-{bot_name}.json"
+        new_filename = f"{parts[0]}-{character_name}.json"
     return new_filename
 
-def update_filenames(bot_name):
+def update_filenames(character_name):
     for filename in os.listdir('.'):
-        new_filename = convert_filename(filename, bot_name)
+        new_filename = convert_filename(filename, character_name)
         if new_filename:
             os.rename(filename, new_filename)
             print(f"Renamed '{filename}' to '{new_filename}'")
@@ -40,8 +40,8 @@ def update_version_in_env(current_version):
         file.writelines(env_lines)
     return version_updated
 
-def check_and_run_update(bot_name, current_version):
+def check_and_run_update(character_name, current_version):
     if update_version_in_env(current_version):
         print("Updating to new version...")
-        update_filenames(bot_name)
+        update_filenames(character_name)
         print("Update complete!")
