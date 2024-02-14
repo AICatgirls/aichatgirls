@@ -49,6 +49,8 @@ async def on_message(message):
     if message.author == client.user:
         return
     if message.content:
+        if isinstance(message.channel, discord.DMChannel):
+            return
         if message.content.startswith("/"): # slash commands process first
             command = message.content.split(" ")[0]
             text_response = chat_command(command, message, character)
