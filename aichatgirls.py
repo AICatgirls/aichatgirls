@@ -26,8 +26,8 @@ import loadCharacterCard
 import requests
 from scripts.whitelist import Whitelist
 
-# Set up Discord bot token and API endpoint URL
 DISCORD_TOKEN = os.getenv('TOKEN')
+ALLOW_DMS = os.getenv('ALLOW_DMS', 'true').lower() == 'true'
 client = discord.Client(intents=discord.Intents.all())
 whitelist = Whitelist()
 
@@ -41,7 +41,6 @@ async def on_ready():
     print('Logged in as {0.user}'.format(client))
     character = loadCharacterCard.Character.load_character_card(client.user.name)
     context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}"
-    # context = f"{character.name}'s Persona: {character.personality}\n<START>\n[DIALOGUE HISTORY]"
     encryption.get_or_generate_key()
 
 @client.event
@@ -49,6 +48,8 @@ async def on_message(message):
     if message.author == client.user:
         return
     if message.content:
+        if not ALLOW_DMS and isinstance(message.channel, discord.DMChannel):
+            return
         if message.content.startswith("/"): # slash commands process first
             command = message.content.split(" ")[0]
             text_response = chat_command(command, message, character)
