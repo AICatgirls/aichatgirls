@@ -8,6 +8,8 @@
 # TODO: Delete DM history
 # TODO: Text to speech
 
+CURRENT_VERSION = "1"
+
 # Check if discord token TOKEN is set in .env file
 from dotenv import load_dotenv
 import os
@@ -18,6 +20,7 @@ if not os.getenv('TOKEN'):
 # ChatGPT doesn't like reading the above, so I've moved it to the top to make it easier to exclude it
 
 from chatCommand import chat_command
+from update import check_and_run_update
 from datetime import datetime
 import discord
 import encryption
@@ -41,6 +44,7 @@ async def on_ready():
     print('Logged in as {0.user}'.format(client))
     character = loadCharacterCard.Character.load_character_card(client.user.name)
     context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}"
+    check_and_run_update(character.name, CURRENT_VERSION)
     encryption.get_or_generate_key()
 
 @client.event
