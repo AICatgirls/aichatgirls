@@ -2,6 +2,7 @@ import requests
 import chatHistory
 import settings
 import json
+import datetime
 
 API_ENDPOINT="http://127.0.0.1:5000/v1/completions"
 MODEL_MAX_TOKENS = 8000
@@ -9,19 +10,23 @@ AVERAGE_CHARACTERS_PER_TOKEN = 3.525
 MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 
 async def generate_prompt_response(message, character, context):
-    chat_history = chatHistory.ChatHistory(message, character.name).load(character, message.author.display_name)
-    user_settings = settings.load_user_settings(message.author, character.name)
-    prompt = (context + 
-              "\n" + chat_history[-MAX_CHAT_HISTORY_LENGTH:] + # Limit chat history
-              "\n" + message.author.display_name + ": " + message.content +
-              "\n" + character.name + ":" + user_settings["prefix"] + " ").lstrip()
-    
+    # Initialize ChatHistory instance
+    chat_history_instance = chatHistory.ChatHistory(message, character.name)
+    chat_history_data = chat_history_instance.load(character, message.author.display_name)
+
+    # Construct the prompt
+    chat_history = chat_history_data["messages"]
+    formatted_history = "\n".join([f"{msg['user']}: {msg['message']}" for msg in chat_history[-MAX_CHAT_HISTORY_LENGTH:]])
+    prompt = (context + "\n" + formatted_history + "\n" + message.author.display_name + ": " + message.content).lstrip()
+
+    # Prepare headers for API request
     headers = {
         "Content-Type": "application/json",
         # Add your authorization header here if needed
     }
     
     # Prepare the data for the request
+    user_settings = settings.load_user_settings(message.author, character.name)
     data = {
         "mode": "chat-instruct",
         "prompt": prompt,
@@ -33,26 +38,37 @@ async def generate_prompt_response(message, character, context):
         "stop": [f"{message.author.display_name}:"],
         "max_context_length": 8192,
     }
+    
+    # Send the API request
     print(f"Incoming message from {message.author.display_name}")
     response = requests.post(API_ENDPOINT, headers=headers, json=data)
-    print(f"Response Status Code: {response.status_code}")  # Print status code
-    
     response_json = response.json()
+    print(f"Response Status Code: {response.status_code}")
+    
     if response.status_code == 200 and "choices" in response_json and len(response_json["choices"]) > 0:
-        text_response = text_response = response_json["choices"][0]["text"].strip()
-        
-        # Check if response starts with "CharacterName: " and remove it
+        text_response = response_json["choices"][0]["text"].strip()
+
+        # Strip off the bot's name from the response
         character_prefix = f"{character.name}: "
         if text_response.startswith(character_prefix):
             text_response = text_response[len(character_prefix):].strip()
     else:
         text_response = "Sorry, I couldn't generate a response."
-        print(f"API response error: {response_json}")
-        
+    
     # Append the original message and text response to the chat history
-    updated_chat_history = (
-        chat_history + f"\n{message.author.display_name}: {message.content}\n{character.name}: {text_response}"
-    )
-    chatHistory.ChatHistory(message, character.name).save(updated_chat_history)
-    settings.save_user_settings(message.author, character.name, user_settings)
+    new_user_message = {
+        "user": message.author.display_name,
+        "message": message.content,
+        "timestamp": message.created_at.isoformat()
+    }
+    new_bot_response = {
+        "user": character.name,
+        "message": text_response,
+        "timestamp": datetime.datetime.now().isoformat()
+    }
+    chat_history_data["messages"].extend([new_user_message, new_bot_response])
+    
+    # Save the updated chat history
+    chat_history_instance.save(chat_history_data)
+
     return text_response
