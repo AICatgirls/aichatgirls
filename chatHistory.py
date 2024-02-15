@@ -14,9 +14,9 @@ class ChatHistory:
 
     def determine_filename(self, message, bot_name):
         if isinstance(message.channel, discord.DMChannel):
-            return f"{message.author.id}-{bot_name}.json"
+            return f"{message.author}-{bot_name}.txt"
         else:
-            return f"{message.channel.guild.id}-{message.channel.id}-{bot_name}.json"
+            return f"{message.channel.guild}-{message.channel}-{message.channel.id}.txt"
 
     def get_or_generate_cipher_suite(self):
         encryption_key = get_or_generate_key()

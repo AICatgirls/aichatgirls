@@ -40,8 +40,10 @@ async def generate_prompt_response(message, character, context):
     }
     
     # Send the API request
+    print(f"Incoming message from {message.author.display_name}")
     response = requests.post(API_ENDPOINT, headers=headers, json=data)
     response_json = response.json()
+    print(f"Response Status Code: {response.status_code}")
     
     if response.status_code == 200 and "choices" in response_json and len(response_json["choices"]) > 0:
         text_response = response_json["choices"][0]["text"].strip()
