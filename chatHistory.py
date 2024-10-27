@@ -2,10 +2,8 @@ import os
 import json
 from cryptography.fernet import Fernet, InvalidToken
 import discord
-from dotenv import load_dotenv
 from encryption import get_or_generate_key
 
-load_dotenv()
 
 class ChatHistory:
     def __init__(self, message, bot_name):

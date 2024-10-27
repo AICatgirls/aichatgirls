@@ -4,6 +4,9 @@ Discord bot for [oobabooga webui](https://github.com/oobabooga/text-generation-w
 This is my first project ever. Any suggestions or contributions are welcome!
 
 ## New Features
+
+10/18/2024 - Add `OPENAI_API_KEY=your_generated_api_key_here` to the `.env` file to use ChatGPT
+
 2/13/2024 - You can add `ALLOW_DMS=false` to the `.env` file to make the bot ignore DMs
 
 8/11/2023 - Chat history is now encrypted. ChatCommands now start with / instead of !.
