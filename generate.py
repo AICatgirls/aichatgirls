@@ -41,16 +41,22 @@ async def generate_prompt_response(message, character, context):
     if OPENAI_API_KEY:
         # OpenAI API call
         try:
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": prompt},
-                    {"role": "user", "content": message.content}
-                ],
-                max_tokens=user_settings["max_response_length"],
-                temperature=user_settings["temperature"]
-            )
-            text_response = response.choices[0].message.content.strip()
+            moderation_response = client.moderations.create(input=message.content)
+            moderation_result = moderation_response.results[0]
+            if moderation_result.flagged:
+                print("Input violates usage policies.")
+                text_response = "Sorry, but your input violates content guidelines."
+            else:
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": prompt},
+                        {"role": "user", "content": message.content}
+                    ],
+                    max_tokens=user_settings["max_response_length"],
+                    temperature=user_settings["temperature"]
+                )
+                text_response = response.choices[0].message.content.strip()
         except Exception as e:
             text_response = f"An error occurred: {e}"
     else:
