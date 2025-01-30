@@ -1,9 +1,12 @@
 # aichatgirls
 Discord bot for [oobabooga webui](https://github.com/oobabooga/text-generation-webui)
 
-This is my first project ever. Any suggestions or contributions are welcome!
+If I broke it I'm sorry...
 
 ## New Features
+
+1/29/2025 - Add `OPENAI_API_KEY=your_generated_api_key_here` to the `.env` file to use ChatGPT. The moderation module will block flagged messages to protect your account.
+
 2/13/2024 - You can add `ALLOW_DMS=false` to the `.env` file to make the bot ignore DMs
 
 8/11/2023 - Chat history is now encrypted. ChatCommands now start with / instead of !.

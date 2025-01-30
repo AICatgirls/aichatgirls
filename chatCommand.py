@@ -90,10 +90,10 @@ def handle_setting_command(user_id, character, args):
     settings = load_user_settings(user_id, character.name)
     default_settings = {
         "max_response_length": 400,
-        "min_length": 1,
-        "temperature": 0.5,
+        "min_length": 12,
+        "temperature": 1,
         "repetition_penalty": 1.18,
-        "prefix": ' ',
+        "prefix": '',
     }
 
     if default_settings[setting] and value is None:
@@ -118,7 +118,7 @@ def default_range(setting_name):
     ranges = {
         "max_response_length": (1, 4000),
         "min_length": (1, 4000),
-        "temperature": (0.1, 1.0),
+        "temperature": (0.1, 2.0),
         "repetition_penalty": (0.1, 1.9),
     }
     return ranges.get(setting_name, (0, 0))
