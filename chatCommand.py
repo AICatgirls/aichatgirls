@@ -1,5 +1,5 @@
 from chatHistory import ChatHistory
-from settings import load_user_settings, save_user_settings
+from settings import load_user_settings, save_user_settings, handle_setting_command
 from scripts.whitelist import Whitelist
 
 whitelist = Whitelist()
@@ -72,47 +72,6 @@ def remove_string_from_chat_history(message, character, string_to_remove):
 
     ChatHistory(message, character.name).save(updated_chat_history)
     return f"All instances of '{string_to_remove}' have been removed from the chat history."
-
-def handle_setting_command(user_id, character, args):
-    if len(args) < 2:
-        return """
-        Invalid usage. Usage: /set [setting] [value]
-        Valid settings are:
-            max_response_length - How long the response can be. Shorter responses generate faster.
-            min_length - Force the bot to talk longer. Default 1
-            temperature - A number between 0.1 and 1.0, default 0.5. The higher the number the more creative the response.
-            repetition_penalty - A number between 0.1 and 1.9, default 1.18.
-            prefix - A hidden phrase that the bot will silently say before giving a response
-        """
-
-    setting = args[1]
-    value = args[2] if len(args) > 2 else None  # Check if value is provided
-    settings = load_user_settings(user_id, character.name)
-    default_settings = {
-        "max_response_length": 400,
-        "min_length": 12,
-        "temperature": 1,
-        "repetition_penalty": 1.18,
-        "prefix": '',
-    }
-
-    if default_settings[setting] and value is None:
-        # Reset setting to default
-        settings[setting] = default_settings[setting]
-        save_user_settings(user_id, character.name, settings)
-        return f"Setting '{setting}' reset to default value of {default_settings[setting]}"
-
-    elif default_settings[setting]:
-        old_value = settings.get(setting, "not set")
-        new_value = value
-        return (
-            handle_float_setting(user_id, character.name, settings, setting, new_value, *default_range(setting))
-            if is_float_setting(setting)
-            else handle_string_setting(user_id, character.name, settings, setting, new_value, default_settings[setting])
-        )
-
-    else:
-        return "Invalid setting. Valid settings are:\n" + "\n".join(default_settings.keys())
 
 def default_range(setting_name):
     ranges = {

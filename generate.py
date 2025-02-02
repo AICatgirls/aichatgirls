@@ -23,11 +23,17 @@ async def generate_prompt_response(message, character, context):
     chat_history_instance = chatHistory.ChatHistory(message, character.name)
     chat_history_data = chat_history_instance.load(character, message.author.display_name)
     user_settings = settings.load_user_settings(message.author, character.name)
+    prefix = user_settings.get("prefix","").strip()
 
     # Construct the prompt
     chat_history = chat_history_data["messages"]
     formatted_history = "\n".join([f"{msg['user']}: {msg['message']}" for msg in chat_history[-MAX_CHAT_HISTORY_LENGTH:]])
-    prompt = (context + "\n" + formatted_history + "\n" + message.author.display_name + ": " + message.content).lstrip()
+    prompt = (
+        context + "\n" +
+        formatted_history + "\n" +
+        message.author.display_name + ": " + message.content + "\n" +
+        character.name + ": " + prefix
+    )
 
     # Prepare headers for API request
     headers = {
@@ -50,8 +56,8 @@ async def generate_prompt_response(message, character, context):
                 response = client.chat.completions.create(
                     model="gpt-4o-mini",
                     messages=[
-                        {"role": "system", "content": prompt},
-                        {"role": "user", "content": message.content}
+                        {"role": "system", "content": context},
+                        {"role": "user", "content": prompt}
                     ],
                     max_tokens=user_settings["max_response_length"],
                     temperature=user_settings["temperature"]
