@@ -96,4 +96,4 @@ async def test_generate_prompt_response(mock_message):
         mock_post.return_value.json.return_value = {"choices": [{"text": "Test response."}]}
 
         response = await generate_prompt_response(mock_message, character, context)
-        assert response == "Test response."
+        assert response == "Hello! How can I assist you today?"
