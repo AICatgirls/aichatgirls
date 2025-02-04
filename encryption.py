@@ -1,5 +1,8 @@
-import os
 from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 def get_or_generate_key():
     encryption_key = os.getenv('SECRET_KEY')

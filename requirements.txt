@@ -3,3 +3,8 @@ requests
 python-dotenv
 cryptography
 openai
+pytest
+pytest_asyncio
+pydantic
+pydantic_core
+jitter
