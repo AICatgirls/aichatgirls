@@ -47,4 +47,4 @@ Users can now alter bot settings. Usage `/set [setting] [value]` or `/set [setti
 * prefix - A hidden phrase that the bot will silently say before giving a response. Default none.
 
 ## For Developers
-If you want to run the automated tests, run `conda install pytest` or `pip install pytest` to install pytest, and then `pytest tests/` to run the test suite.
+If you want to run the automated tests, run `conda install pytest` or `pip install pytest` to install pytest, and then `pytest -v` to run the test suite.
