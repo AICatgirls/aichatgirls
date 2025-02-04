@@ -16,6 +16,8 @@ If I broke it I'm sorry...
 8/4/2023 - Added a `/remove <string>` command to remove a string from the bot's memory.
 
 ## Install
+Looks like you'll need python 3.11 or 3.12
+
 1. `git clone https://github.com/AICatgirls/aichatgirls.git`
 2. In the aichatgirls folder (`cd aichatgirls`), run `pip install -r .\requirements.txt`
 3. You will need to create a discord bot
@@ -43,3 +45,6 @@ Users can now alter bot settings. Usage `/set [setting] [value]` or `/set [setti
 * temperature - A number between 0.1 and 1.9, default 0.4. The higher the number the more creative the response.
 * repetition_penalty - A number between 0.1 and 1.9, default 1.18.
 * prefix - A hidden phrase that the bot will silently say before giving a response. Default none.
+
+## For Developers
+If you want to run the automated tests, run `conda install pytest` or `pip install pytest` to install pytest, and then `pytest tests/` to run the test suite.
