@@ -59,7 +59,6 @@ async def console_chat():
         # Check for slash commands before sending to generate_prompt_response
         if user_input.startswith("/"):
             response = chat_command(user_input, message_mock, character)
-            print(f"DEBUG: chat_command response for '{user_input}': {response}")
         else:
             response = await generate_prompt_response(message_mock, character, context)
             
@@ -104,4 +103,13 @@ async def on_message(message):
     else:
         return
         
-client.run(DISCORD_TOKEN)
+if DISCORD_TOKEN:
+    client.run(DISCORD_TOKEN)
+else:
+    print("Discord integration disabled. Running local chat only.")
+
+    # Manually load character for local chat
+    character = loadCharacterCard.Character.load_character_card(USER_NAME)
+    context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}"
+    
+    asyncio.run(console_chat())

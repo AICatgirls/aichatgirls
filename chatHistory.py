@@ -8,7 +8,6 @@ from encryption import get_or_generate_key
 class ChatHistory:
     def __init__(self, message, bot_name):
         self.filename = self.determine_filename(message, bot_name)
-        print(self.filename)
         self.cipher_suite = self.get_or_generate_cipher_suite()
 
     def determine_filename(self, message, bot_name):
