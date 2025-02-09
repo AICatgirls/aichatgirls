@@ -1,9 +1,9 @@
 # aichatgirls
-Discord bot for [oobabooga webui](https://github.com/oobabooga/text-generation-webui) and/or ChatGPT
+Discord bot for [oobabooga webui](https://github.com/oobabooga/text-generation-webui)
+
+If I broke it I'm sorry...
 
 ## New Features
-
-2/8/2025 - You can now chat from the console, even if you don't have a discord API key
 
 1/29/2025 - Add `OPENAI_API_KEY=your_generated_api_key_here` to the `.env` file to use ChatGPT. The moderation module will block flagged messages to protect your account.
 
@@ -47,4 +47,4 @@ Users can now alter bot settings. Usage `/set [setting] [value]` or `/set [setti
 * prefix - A hidden phrase that the bot will silently say before giving a response. Default none.
 
 ## For Developers
-To run the automated tests, run `pytest -v`
+If you want to run the automated tests, run `conda install pytest` or `pip install pytest` to install pytest, and then `pytest -v` to run the test suite.
