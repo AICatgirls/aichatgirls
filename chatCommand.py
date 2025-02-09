@@ -20,7 +20,7 @@ def chat_command(command, message, character):
             /help - Shows list of available commands.
         """
         
-    elif not whitelist.is_channel_whitelisted(message.channel):
+    elif not whitelist.is_channel_whitelisted(message.channel) and message.channel.name != "local_chat":
         return
 
     elif command == "/blacklist":
