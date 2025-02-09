@@ -4,7 +4,7 @@ python-dotenv
 cryptography
 openai
 pytest
-pytest_asyncio
+pytest-bdd
 pydantic
 pydantic_core
 jitter

@@ -1,7 +1,7 @@
 import chatHistory
 import datetime
 import json
-from openai import OpenAI
+import openai
 import os
 import requests
 import settings
@@ -16,7 +16,7 @@ AVERAGE_CHARACTERS_PER_TOKEN = 3.525
 MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 if OPENAI_API_KEY:
-    client = OpenAI(api_key=OPENAI_API_KEY)
+    client = openai.Client(api_key=OPENAI_API_KEY)
 
 async def generate_prompt_response(message, character, context):
     # Initialize ChatHistory instance
