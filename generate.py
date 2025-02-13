@@ -10,9 +10,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Constants & Configuration ---
-API_ENDPOINT = os.getenv("OOBABOOGA_API_ENDPOINT", "http://127.0.0.1:5000/v1/completions")
+API_ENDPOINT = os.getenv("API_ENDPOINT", "http://127.0.0.1:5000/v1/completions")
 
-MODEL_MAX_TOKENS = 190000
+MODEL_MAX_TOKENS = int(os.getenv("MODEL_MAX_TOKENS", "190000"))
 AVERAGE_CHARACTERS_PER_TOKEN = 3.525
 MAX_CHAT_HISTORY_LENGTH = int(MODEL_MAX_TOKENS * AVERAGE_CHARACTERS_PER_TOKEN * 0.9)
 
@@ -51,9 +51,14 @@ def moderate_input_with_requests(message_content):
     data = {"input": message_content}
 
     try:
-        response = requests.post(url, headers=headers, data=json.dumps(data))
+        response = requests.post(url, headers=headers, json=data, timeout=10)
         response.raise_for_status()
-        return response.json()  # Must contain 'results' with 'flagged'
+        response_json = response.json()
+        
+        if "results" not in response_json:
+            return {"error": "Unexpected response format. Missing 'results' key."}
+        
+        return response_json
     except requests.RequestException as e:
         print(f"Error calling Moderation endpoint: {e}")
         return {"error": str(e)}
