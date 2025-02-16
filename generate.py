@@ -7,6 +7,9 @@ import chatHistory
 import settings
 from dotenv import load_dotenv
 
+# Import your Character class so we can load the character data here
+import loadCharacterCard
+
 load_dotenv()
 
 # --- Constants & Configuration ---
@@ -54,10 +57,10 @@ def moderate_input_with_requests(message_content):
         response = requests.post(url, headers=headers, json=data, timeout=10)
         response.raise_for_status()
         response_json = response.json()
-        
+
         if "results" not in response_json:
             return {"error": "Unexpected response format. Missing 'results' key."}
-        
+
         return response_json
     except requests.RequestException as e:
         print(f"Error calling Moderation endpoint: {e}")
@@ -65,7 +68,7 @@ def moderate_input_with_requests(message_content):
 
 def call_openai(context, prompt, user_settings, message_content):
     """
-    Demonstration of the new openai.chat.completions interface in openai>=1.0.0.
+    Demonstration of the openai.chat.completions interface in openai>=1.0.0.
     """
     # 1) Moderation check (using direct HTTP request)
     moderation_data = moderate_input_with_requests(message_content)
@@ -79,7 +82,6 @@ def call_openai(context, prompt, user_settings, message_content):
 
     # 2) If moderation passes, use Chat Completions
     try:
-        # Note the new usage: openai.chat.completions.create instead of openai.ChatCompletion.create
         response = openai.chat.completions.create(
             model="gpt-4o-mini",  # or "gpt-4" if you have access
             messages=[
@@ -95,7 +97,7 @@ def call_openai(context, prompt, user_settings, message_content):
 
 def call_oobabooga(prompt, user_settings, user_display_name):
     """
-    Calls the Oobabooga API endpoint with a JSON payload for chat/instruct mode.
+    Calls the Oobabooga API endpoint with a JSON payload for chat-instruct mode.
     Returns the text response or a fallback message on errors.
     """
     headers = {
@@ -126,18 +128,39 @@ def call_oobabooga(prompt, user_settings, user_display_name):
         return f"An error occurred while calling Oobabooga: {req_err}"
 
 # --- Main Function ---
-async def generate_prompt_response(message, character, context):
+async def generate_prompt_response(message):
+    """
+    Generates a response for the given message by:
+      1. Loading the user's Character (with fallback)
+      2. Building the context
+      3. Managing the chat history
+      4. Calling the LLM (OpenAI or Oobabooga)
+      5. Saving the updated chat history
+    """
     print(f"Incoming message from {message.author.display_name}")
 
-    # 1) Initialize and load chat history
+    # 1) Load the Character
+    #    Use the user's ID (or some unique string) + a fallback name like "Felicia".
+    user_id = str(message.author.id)
+    character = loadCharacterCard.Character.load_character_card(user_id, "Felicia")
+
+    # 2) Build the context from the Character's data
+    context = (
+        f"Name: {character.name}\n"
+        f"Description: {character.description}\n"
+        f"Personality: {character.personality}"
+    )
+
+    # 3) Initialize and load chat history
+    #    We'll just pass the character's name for identification in the history.
     chat_history_instance = chatHistory.ChatHistory(message, character.name)
     chat_history_data = chat_history_instance.load(character, message.author.display_name)
 
-    # 2) Load user settings
-    user_settings = settings.load_user_settings(message.author, character.name)
+    # 4) Load user settings (for temperature, max tokens, etc.)
+    user_settings = settings.load_user_settings(user_id, character.name)
     prefix = user_settings.get("prefix", "").strip()
 
-    # 3) Build the prompt
+    # 5) Build the prompt
     prompt = build_prompt(
         context=context,
         chat_history=chat_history_data["messages"],
@@ -147,18 +170,18 @@ async def generate_prompt_response(message, character, context):
         prefix=prefix
     )
 
-    # 4) Determine which API to call
+    # 6) Call the appropriate API
     if OPENAI_API_KEY:
         text_response = call_openai(context, prompt, user_settings, message.content)
     else:
         text_response = call_oobabooga(prompt, user_settings, message.author.display_name)
 
-    # 5) Strip off the bot's name if it appears in the response
+    # 7) Strip off the bot's name if it appears in the response
     character_prefix = f"{character.name}: "
     if text_response.startswith(character_prefix):
         text_response = text_response[len(character_prefix):].strip()
 
-    # 6) Append new messages to chat history
+    # 8) Append new messages to chat history
     new_user_message = {
         "user": message.author.display_name,
         "message": message.content,
@@ -171,7 +194,7 @@ async def generate_prompt_response(message, character, context):
     }
     chat_history_data["messages"].extend([new_user_message, new_bot_response])
 
-    # 7) Save updated chat history
+    # 9) Save updated chat history
     chat_history_instance.save(chat_history_data)
 
     return text_response

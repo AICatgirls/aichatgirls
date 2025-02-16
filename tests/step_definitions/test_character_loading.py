@@ -15,7 +15,7 @@ def given_character_card_exists():
 @pytest.fixture
 @when("The bot loads the character card")
 def when_bot_loads_character_card():
-    character = Character.load_character_card("TestCharacter")
+    character = Character.load_character_card("test_user_id", "TestCharacter")
     return character
 
 
