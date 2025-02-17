@@ -99,7 +99,7 @@ async def on_message(message):
     # Slash commands first
     if message.content.startswith("/"):
         command = message.content.split(" ")[0]
-        character = loadCharacterCard.Character.load_character_card(message.author.id, client.user)
+        character = loadCharacterCard.Character.load_character_card(message.author.id, client.user.name)
         text_response = chat_command(command, message, character)
     else:
         # Only process if channel is whitelisted
