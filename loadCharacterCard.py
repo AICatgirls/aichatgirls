@@ -64,7 +64,7 @@ class Character:
         return bool(value and value.strip())
 
     @classmethod
-    def load_character_card(cls, user_id: str, character_name: str = "Felicia"):
+    def load_character_card(cls, user_id: str, fallback_name: str = "Felicia"):
         """
         Loads character parameters in the following order of precedence:
           1. user-specific overrides (if valid)
@@ -72,10 +72,16 @@ class Character:
           3. default (Felicia or a named fallback)
         """
         # 1. Load user-specific settings/overrides
-        user_settings = load_user_settings(user_id, character_name)
+        user_settings = load_user_settings(user_id)
 
         # 2. Attempt to read the card data
         card_data = cls.read_character_card_data()
+        
+        character_name = (
+            user_settings.get("name") or
+            (card_data.get("name") if card_data else None) or
+            fallback_name
+        )
 
         # 3. Define defaults (Felicia or fallback based on 'character_name')
         default_props = {

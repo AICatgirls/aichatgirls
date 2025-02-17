@@ -157,7 +157,7 @@ async def generate_prompt_response(message):
     chat_history_data = chat_history_instance.load(character, message.author.display_name)
 
     # 4) Load user settings (for temperature, max tokens, etc.)
-    user_settings = settings.load_user_settings(user_id, character.name)
+    user_settings = settings.load_user_settings(message.author.id)
     prefix = user_settings.get("prefix", "").strip()
 
     # 5) Build the prompt

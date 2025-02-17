@@ -33,9 +33,6 @@ whitelist = Whitelist()
 
 # For local console chat
 USER_NAME = "localuser"
-# We'll store a dummy "global character" only if the slash commands need it.
-# Otherwise, you can remove this entirely if your slash commands no longer rely on a global character.
-global_character = {}
 
 async def console_chat():
     print("Local chat enabled. Type 'exit' to stop console chat.")
@@ -64,10 +61,11 @@ async def console_chat():
             "__str__": lambda self: "local_chat"
         })()
 
+        character = loadCharacterCard.Character.load_character_card(message_mock.author.id, "Felicia")
+
         # Slash commands still check before generating a response
         if user_input.startswith("/"):
-            response = chat_command(user_input, message_mock, global_character)
-            # If slash commands rely on a global character, pass global_character
+            response = chat_command(user_input, message_mock, character)
         else:
             # Use the new generate function, which handles character loading internally
             response = await generate_prompt_response(message_mock)
@@ -81,12 +79,7 @@ async def start_console_chat():
 @client.event
 async def on_ready():
     print(f"Logged in as {client.user}")
-    encryption.get_or_generate_key()
-    
-    # Load a global fallback Character (optional)
-    global global_character
-    global_character = loadCharacterCard.Character.load_character_card("global", "Felicia")
-    
+    encryption.get_or_generate_key()   
     asyncio.create_task(start_console_chat())
 
 @client.event
@@ -106,7 +99,8 @@ async def on_message(message):
     # Slash commands first
     if message.content.startswith("/"):
         command = message.content.split(" ")[0]
-        text_response = chat_command(command, message, global_character)
+        character = loadCharacterCard.Character.load_character_card(message.author.id, client.user)
+        text_response = chat_command(command, message, character)
     else:
         # Only process if channel is whitelisted
         if not whitelist.is_channel_whitelisted(message.channel):
