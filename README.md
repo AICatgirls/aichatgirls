@@ -1,7 +1,8 @@
 # aichatgirls
-Discord bot for [oobabooga webui](https://github.com/oobabooga/text-generation-webui) and/or ChatGPT
+Discord/local chatbot for [oobabooga webui](https://github.com/oobabooga/text-generation-webui) and/or ChatGPT
 
 ## New Features
+2/17/2025 - You can use `/set [name/description/personality] <string>` to customize the chatbot. Keep in mind that chat history is linked to the character name.
 
 2/12/2025 - Add `MODEL_MAX_TOKENS=#` to the `.env` file to configure your context window size. Add `API_ENDPOINT=http...` to use a custom API endpoint.
 

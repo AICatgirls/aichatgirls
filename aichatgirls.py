@@ -17,10 +17,10 @@ if not os.getenv('TOKEN'):
 # ChatGPT doesn't like reading the above, so I've moved it to the top to make it easier to exclude it
 
 import asyncio
-from chatCommand import chat_command
-from datetime import datetime
 import discord
+from datetime import datetime
 import encryption
+from chatCommand import chat_command
 from generate import generate_prompt_response
 import loadCharacterCard
 from scripts.whitelist import Whitelist
@@ -31,8 +31,7 @@ ALLOW_DMS = os.getenv('ALLOW_DMS', 'true').lower() == 'true'
 client = discord.Client(intents=discord.Intents.all())
 whitelist = Whitelist()
 
-character = {}
-context = ""
+# For local console chat
 USER_NAME = "localuser"
 
 async def console_chat():
@@ -45,8 +44,14 @@ async def console_chat():
             print("Console chat disabled.")
             break
 
+        # Create a mock message object with minimal attributes
         message_mock = type('', (), {})()
-        message_mock.author = type('', (), {"display_name": USER_NAME, "__str__": lambda self: USER_NAME})()
+        # Make sure we assign an 'id' to the author—this is used by generate.py to load user-specific data
+        message_mock.author = type('', (), {
+            "display_name": USER_NAME,
+            "id": 1234567890,  # Just a dummy ID for local user
+            "__str__": lambda self: USER_NAME
+        })()
         message_mock.content = user_input
         message_mock.created_at = datetime.now()
         message_mock.channel = type('', (), {
@@ -56,60 +61,65 @@ async def console_chat():
             "__str__": lambda self: "local_chat"
         })()
 
-        # Check for slash commands before sending to generate_prompt_response
+        character = loadCharacterCard.Character.load_character_card(message_mock.author.id, "Felicia")
+
+        # Slash commands still check before generating a response
         if user_input.startswith("/"):
             response = chat_command(user_input, message_mock, character)
         else:
-            response = await generate_prompt_response(message_mock, character, context)
-            
-        print(f"{character.name}: {response}")
+            # Use the new generate function, which handles character loading internally
+            response = await generate_prompt_response(message_mock)
+        
+        # Print the response to the console
+        print(f"Bot: {response}")
 
 async def start_console_chat():
     asyncio.create_task(console_chat())  # Run as a background task
 
 @client.event
 async def on_ready():
-    global character
-    global context
-    print('Logged in as {0.user}'.format(client))
-    character = loadCharacterCard.Character.load_character_card(client.user.name)
-    context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}"
-    encryption.get_or_generate_key()
+    print(f"Logged in as {client.user}")
+    encryption.get_or_generate_key()   
     asyncio.create_task(start_console_chat())
 
 @client.event
 async def on_message(message):
+    # Ignore our own messages
     if message.author == client.user:
         return
-    if message.content:
-        if not ALLOW_DMS and isinstance(message.channel, discord.DMChannel):
-            return
-        if message.content.startswith("/"): # slash commands process first
-            command = message.content.split(" ")[0]
-            text_response = chat_command(command, message, character)
-        else:
-            if not whitelist.is_channel_whitelisted(message.channel):
-                return
-            text_response = await generate_prompt_response(message, character, context)
 
-        # If response is longer than 2000 characters, split and send multiple messages
-        chunks = [text_response[i:i + 2000] for i in range(0, len(text_response), 2000)]
-        for chunk in chunks:
-            if isinstance(message.channel, discord.DMChannel):
-                await message.author.send(chunk)
-            else:
-                await message.channel.send(chunk)
-
-    else:
+    # If there's no content, do nothing
+    if not message.content:
         return
-        
+
+    # Check DM allowance
+    if not ALLOW_DMS and isinstance(message.channel, discord.DMChannel):
+        return
+
+    # Slash commands first
+    if message.content.startswith("/"):
+        command = message.content.split(" ")[0]
+        character = loadCharacterCard.Character.load_character_card(message.author.id, client.user.name)
+        text_response = chat_command(command, message, character)
+    else:
+        # Only process if channel is whitelisted
+        if not whitelist.is_channel_whitelisted(message.channel):
+            return
+        # Use our new approach
+        text_response = await generate_prompt_response(message)
+
+    # If response is longer than 2000 characters, split and send multiple messages
+    chunks = [text_response[i:i + 2000] for i in range(0, len(text_response), 2000)]
+    for chunk in chunks:
+        if isinstance(message.channel, discord.DMChannel):
+            await message.author.send(chunk)
+        else:
+            await message.channel.send(chunk)
+
 if DISCORD_TOKEN:
     client.run(DISCORD_TOKEN)
 else:
     print("Discord integration disabled. Running local chat only.")
 
-    # Manually load character for local chat
-    character = loadCharacterCard.Character.load_character_card(USER_NAME)
-    context = f"Name: {character.name}\nDescription: {character.description}\nPersonality: {character.personality}"
-    
+    # Just run local console chat
     asyncio.run(console_chat())

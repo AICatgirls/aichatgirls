@@ -35,7 +35,7 @@ def chat_command(command, message, character):
         return remove_string_from_chat_history(message, character, string_to_remove)
 
     elif command.startswith("/set"):
-        return handle_setting_command(message.author, character, message.content.split(" ", 2))
+        return handle_setting_command(message.author.id, message.content.split(" ", 2))
 
     else:
         return """
@@ -72,42 +72,3 @@ def remove_string_from_chat_history(message, character, string_to_remove):
 
     ChatHistory(message, character.name).save(updated_chat_history)
     return f"All instances of '{string_to_remove}' have been removed from the chat history."
-
-def default_range(setting_name):
-    ranges = {
-        "max_response_length": (1, 4000),
-        "min_length": (1, 4000),
-        "temperature": (0.1, 2.0),
-        "repetition_penalty": (0.1, 1.9),
-    }
-    return ranges.get(setting_name, (0, 0))
-
-def is_float_setting(setting_name):
-    return setting_name in ["max_response_length", "min_length", "temperature", "repetition_penalty"]
-
-def handle_float_setting(user_id, character_name, settings, setting_name, value, min_value, max_value):
-    try:
-        value = float(value)
-        if not min_value <= value <= max_value:
-            raise ValueError
-    except ValueError:
-        return f"Invalid value for '{setting_name}'. It should be a number between {min_value} and {max_value}."
-
-    old_value = settings.get(setting_name, "not set")
-    settings[setting_name] = value
-    save_user_settings(user_id, character_name, settings)
-    
-    if old_value != "not set":
-        return f"Setting '{setting_name}' updated from {old_value} to {value}"
-    else:
-        return f"Setting '{setting_name}' set to {value}"
-
-def handle_string_setting(user_id, character_name, settings, setting_name, value, default_value):
-    old_value = settings.get(setting_name, "not set")
-    settings[setting_name] = value
-    save_user_settings(user_id, character_name, settings)
-
-    if old_value != "not set":
-        return f"Setting '{setting_name}' updated from '{old_value}' to '{value}'"
-    else:
-        return f"Setting '{setting_name}' set to '{value}'"
