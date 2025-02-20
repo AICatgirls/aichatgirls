@@ -66,10 +66,32 @@ def moderate_input_with_requests(message_content):
         print(f"Error calling Moderation endpoint: {e}")
         return {"error": str(e)}
 
+def generate_openai_response(
+    context: str,
+    prompt: str,
+    max_tokens: int = 50,
+    temperature: float = 0.1
+) -> str:
+    """
+    Calls the OpenAI chat completion endpoint using the given context and prompt.
+    max_tokens and temperature have default fallback values (50 and 0.1 respectively).
+    Returns the response text or an error message if something goes wrong.
+    """
+    try:
+        response = openai.chat.completions.create(
+            model="gpt-4o-mini",  # or "gpt-4" if you have access
+            messages=[
+                {"role": "system", "content": context},
+                {"role": "user", "content": prompt},
+            ],
+            max_tokens=max_tokens,
+            temperature=temperature,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"An error occurred while calling OpenAI: {e}"
+
 def call_openai(context, prompt, user_settings, message_content):
-    """
-    Demonstration of the openai.chat.completions interface in openai>=1.0.0.
-    """
     # 1) Moderation check (using direct HTTP request)
     moderation_data = moderate_input_with_requests(message_content)
     if "error" in moderation_data:
@@ -81,19 +103,12 @@ def call_openai(context, prompt, user_settings, message_content):
         return "Sorry, but your input violates content guidelines."
 
     # 2) If moderation passes, use Chat Completions
-    try:
-        response = openai.chat.completions.create(
-            model="gpt-4o-mini",  # or "gpt-4" if you have access
-            messages=[
-                {"role": "system", "content": context},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=user_settings["max_response_length"],
-            temperature=user_settings["temperature"],
-        )
-        return response.choices[0].message.content.strip()
-    except Exception as e:
-        return f"An error occurred while calling OpenAI: {e}"
+    return generate_openai_response(
+        context=context,
+        prompt=prompt,
+        max_tokens=user_settings["max_response_length"],
+        temperature=user_settings["temperature"]
+    )
 
 def call_oobabooga(prompt, user_settings, user_display_name):
     """
