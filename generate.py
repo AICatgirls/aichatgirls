@@ -3,11 +3,11 @@ import json
 import datetime
 import requests
 import openai
+from character_state import update_character_state
 import chatHistory
+import concurrent.futures
 import settings
 from dotenv import load_dotenv
-
-# Import your Character class so we can load the character data here
 import loadCharacterCard
 
 load_dotenv()
@@ -25,7 +25,7 @@ if OPENAI_API_KEY:
 
 # --- Helper Functions ---
 
-def build_prompt(context, chat_history, user_display_name, message_content, character_name, prefix):
+def build_prompt(chat_history, user_display_name, message_content, character_name, prefix):
     """
     Construct the full text prompt from the current and previous messages.
     """
@@ -34,7 +34,6 @@ def build_prompt(context, chat_history, user_display_name, message_content, char
         for msg in chat_history[-MAX_CHAT_HISTORY_LENGTH:]
     )
     prompt = (
-        f"{context}\n"
         f"{formatted_history}\n"
         f"{user_display_name}: {message_content}\n"
         f"{character_name}: {prefix}"
@@ -110,21 +109,26 @@ def call_openai(context, prompt, user_settings, message_content):
         temperature=user_settings["temperature"]
     )
 
-def call_oobabooga(prompt, user_settings, user_display_name):
+def call_oobabooga(context, prompt, user_settings=None, user_display_name=None):
     """
     Calls the Oobabooga API endpoint with a JSON payload for chat-instruct mode.
     Returns the text response or a fallback message on errors.
     """
+    if user_settings is None:
+        user_settings = {}
+    if user_display_name is None:
+        user_display_name = "User"
+    
     headers = {
         "Content-Type": "application/json",
     }
     data = {
         "mode": "chat-instruct",
-        "prompt": prompt,
-        "max_tokens": user_settings["max_response_length"],
-        "temperature": user_settings["temperature"],
-        "min_tokens": user_settings["min_length"],
-        "repetition_penalty": user_settings["repetition_penalty"],
+        "prompt": f"{context}\n{prompt}",
+        "max_tokens": user_settings.get("max_response_length", 50),  # default to 50
+        "temperature": user_settings.get("temperature", 0.1),         # default to 0.1
+        "min_tokens": user_settings.get("min_length", 1),              # default if not provided
+        "repetition_penalty": user_settings.get("repetition_penalty", 1.0),  # default if not provided
         "stopping_strings": [f"{user_display_name}:"],
         "stop": [f"{user_display_name}:"],
         "max_context_length": MODEL_MAX_TOKENS,
@@ -141,6 +145,16 @@ def call_oobabooga(prompt, user_settings, user_display_name):
             return "Sorry, I couldn't generate a response."
     except requests.exceptions.RequestException as req_err:
         return f"An error occurred while calling Oobabooga: {req_err}"
+
+def get_last_state_value(messages, state_key, bot_name):
+    """
+    Iterates over messages in reverse order to find the most recent bot message
+    that contains a value for the given state_key.
+    """
+    for msg in reversed(messages):
+        if msg.get("user") == bot_name and state_key in msg:
+            return msg[state_key]
+    return ""  # Default to empty string if not found
 
 # --- Main Function ---
 async def generate_prompt_response(message):
@@ -177,7 +191,6 @@ async def generate_prompt_response(message):
 
     # 5) Build the prompt
     prompt = build_prompt(
-        context=context,
         chat_history=chat_history_data["messages"],
         user_display_name=message.author.display_name,
         message_content=message.content,
@@ -189,14 +202,68 @@ async def generate_prompt_response(message):
     if OPENAI_API_KEY:
         text_response = call_openai(context, prompt, user_settings, message.content)
     else:
-        text_response = call_oobabooga(prompt, user_settings, message.author.display_name)
+        text_response = call_oobabooga(context, prompt, user_settings, message.author.display_name)
 
     # 7) Strip off the bot's name if it appears in the response
     character_prefix = f"{character.name}: "
     if text_response.startswith(character_prefix):
         text_response = text_response[len(character_prefix):].strip()
 
-    # 8) Append new messages to chat history
+    # 8) Update character state using the last recorded state values from chat history
+    previous_action = get_last_state_value(chat_history_data["messages"], "action", character.name)
+    previous_appearance = get_last_state_value(chat_history_data["messages"], "appearance", character.name)
+    previous_location = get_last_state_value(chat_history_data["messages"], "location", character.name)
+    previous_mood = get_last_state_value(chat_history_data["messages"], "mood", character.name)
+
+    # Map state keys to their previous values.
+    state_prev = {
+        "action": previous_action,
+        "appearance": previous_appearance,
+        "location": previous_location,
+        "mood": previous_mood,
+    }
+
+    # Function to update a state, wrapping update_character_state.
+    def update_state(state_key, prev_value):
+        return update_character_state(
+            character,
+            state_key,
+            prev_value,
+            message.content,
+            text_response,
+            bool(OPENAI_API_KEY)
+        )
+
+    # Use a ThreadPoolExecutor to run the updates concurrently.
+    state_results = {}
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Create a dictionary mapping futures to state keys.
+        future_to_state = {
+            executor.submit(update_state, state, prev_val): state
+            for state, prev_val in state_prev.items()
+        }
+        for future in concurrent.futures.as_completed(future_to_state):
+            state = future_to_state[future]
+            try:
+                state_results[state] = future.result()
+            except Exception as exc:
+                print(f"{state} generated an exception: {exc}")
+                state_results[state] = state_prev[state]  # fallback to previous value
+
+    # Now, assign the results to your variables.
+    action = state_results["action"]
+    appearance = state_results["appearance"]
+    location = state_results["location"]
+    mood = state_results["mood"]
+
+    print("Character States:")
+    print(f"  Action: {action}")
+    print(f"  Appearance: {appearance}")
+    print(f"  Location: {location}")
+    print(f"  Mood: {mood}")
+
+
+    # 9) Append new messages to chat history
     new_user_message = {
         "user": message.author.display_name,
         "message": message.content,
@@ -205,11 +272,15 @@ async def generate_prompt_response(message):
     new_bot_response = {
         "user": character.name,
         "message": text_response,
-        "timestamp": datetime.datetime.now().isoformat()
+        "timestamp": datetime.datetime.now().isoformat(),
+        "action": action,
+        "appearance": appearance,
+        "location": location,
+        "mood": mood
     }
     chat_history_data["messages"].extend([new_user_message, new_bot_response])
 
-    # 9) Save updated chat history
+    # 10) Save updated chat history
     chat_history_instance.save(chat_history_data)
 
     return text_response
