@@ -1,33 +1,30 @@
 import re
 from typing import Optional
-from settings import load_user_settings
-
+from settings import load_user_settings, handle_setting_command
+from characterState import get_static_state
 
 class Character:
-    def __init__(self, name, description, personality, first_mes, mes_example):
+    def __init__(self, name, description, personality, first_mes, mes_example, species, sex, eye_color, hair_color, hairstyle, defining_features):
         self.name = name
         self.description = description
         self.personality = personality
         self.first_mes = first_mes
         self.mes_example = mes_example
+        self.species = species
+        self.sex = sex
+        self.eye_color = eye_color
+        self.hair_color = hair_color
+        self.hairstyle = hairstyle
+        self.defining_features = defining_features
 
     @staticmethod
     def extract_property(webp_data: bytes, property_name: str) -> Optional[str]:
-        """
-        Extracts the value of a given property_name in the format:
-            property_name: "<value>"
-        Returns None if not found.
-        """
         pattern = rb'%s: "(.*?)(?<!\\)"' % property_name.encode()
         match = re.search(pattern, webp_data)
         return match.group(1).decode('utf-8') if match else None
 
     @classmethod
     def read_character_card_data(cls) -> Optional[dict]:
-        """
-        Attempts to read data from 'character.webp' and extract properties.
-        Returns a dict of properties if successful, or None if any property is missing or invalid.
-        """
         try:
             with open('character.webp', 'rb') as f:
                 webp_data = f.read()
@@ -64,7 +61,35 @@ class Character:
         return bool(value and value.strip())
 
     @classmethod
-    def load_character_card(cls, user_id: str, fallback_name: str = "Felicia"):
+    def ensure_static_traits(cls, user_id: str, user_settings: dict, character_name: str, use_openai: bool):
+        static_traits = ["species", "sex", "eye_color", "hair_color", "hairstyle", "defining_features"]
+        updated = False
+
+        for trait in static_traits:
+            if not cls.is_valid_value(user_settings.get(trait)):
+                # Generate the value using get_static_state
+                character = cls(
+                    name=character_name,
+                    description=user_settings.get("description", ""),
+                    personality=user_settings.get("personality", ""),
+                    first_mes=user_settings.get("first_mes", ""),
+                    mes_example=user_settings.get("mes_example", ""),
+                    species="",
+                    sex="",
+                    eye_color="",
+                    hair_color="",
+                    hairstyle="",
+                    defining_features=""
+                )
+                generated_value = get_static_state(character, trait, use_openai)
+                handle_setting_command(user_id, ["/set", trait, generated_value])
+                user_settings[trait] = generated_value
+                updated = True
+
+        return updated
+    
+    @classmethod
+    def load_character_card(cls, user_id: str, fallback_name: str = "Felicia", use_openai: bool = True):
         """
         Loads character parameters in the following order of precedence:
           1. user-specific overrides (if valid)
@@ -73,6 +98,10 @@ class Character:
         """
         # 1. Load user-specific settings/overrides
         user_settings = load_user_settings(user_id)
+
+        # Ensure static traits are present
+        character_name = user_settings.get("name") or fallback_name
+        cls.ensure_static_traits(user_id, user_settings, character_name, use_openai)
 
         # 2. Attempt to read the card data
         card_data = cls.read_character_card_data()
@@ -149,11 +178,14 @@ class Character:
         }
 
         # 4. Combine user_settings, card_data, and defaults
+        all_props = ["name", "description", "personality", "first_mes", "mes_example", 
+                     "species", "sex", "eye_color", "hair_color", "hairstyle", 
+                     "defining_features"]
         final_props = {}
-        for prop_key in ["name", "description", "personality", "first_mes", "mes_example"]:
+        for prop_key in all_props:
             user_val = user_settings.get(prop_key)
             card_val = card_data[prop_key] if (card_data and prop_key in card_data) else None
-            default_val = default_props[prop_key]
+            default_val = default_props.get(prop_key)
 
             # Use the first valid value in [user_val, card_val, default_val]
             if cls.is_valid_value(user_val):
@@ -169,14 +201,24 @@ class Character:
             description=final_props["description"],
             personality=final_props["personality"],
             first_mes=final_props["first_mes"],
-            mes_example=final_props["mes_example"]
+            mes_example=final_props["mes_example"],
+            species=final_props["species"],
+            sex=final_props["sex"],
+            eye_color=final_props["eye_color"],
+            hair_color=final_props["hair_color"],
+            hairstyle=final_props["hairstyle"],
+            defining_features=final_props["defining_features"]
         )
 
-        print(f"Character Loaded: {character.name}\n")
+        # print(f"Character Loaded: {character.name}")
+        # print(f"Character Species: {character.species}")
+        # print(f"Character Sex: {character.sex}")
+        # print(f"Character Hair: {character.hairstyle} {character.hair_color}")
+        # print(f"Character Defining Features: {character.defining_features}")
         return character
 
 
 if __name__ == "__main__":
     # Example usage:
     user_id = "some_user"  # adapt as needed
-    character = Character.load_character_card(user_id, character_name="Felicia")
+    character = Character.load_character_card(user_id, fallback_name="Felicia")

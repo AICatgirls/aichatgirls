@@ -3,6 +3,7 @@ requests
 python-dotenv
 cryptography
 openai
+pillow
 pytest
 pytest-bdd
 pydantic

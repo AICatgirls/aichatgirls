@@ -22,12 +22,15 @@ from datetime import datetime
 import encryption
 from chatCommand import chat_command
 from generate import generate_prompt_response
+from imagegen import generate_image_async
+from io import BytesIO
 import loadCharacterCard
 from scripts.whitelist import Whitelist
 import threading
 
 DISCORD_TOKEN = os.getenv('TOKEN')
 ALLOW_DMS = os.getenv('ALLOW_DMS', 'true').lower() == 'true'
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 client = discord.Client(intents=discord.Intents.all())
 whitelist = Whitelist()
 
@@ -61,7 +64,7 @@ async def console_chat():
             "__str__": lambda self: "local_chat"
         })()
 
-        character = loadCharacterCard.Character.load_character_card(message_mock.author.id, "Felicia")
+        character = loadCharacterCard.Character.load_character_card(message_mock.author.id, "Felicia", use_openai=bool(OPENAI_API_KEY))
 
         # Slash commands still check before generating a response
         if user_input.startswith("/"):
@@ -96,17 +99,19 @@ async def on_message(message):
     if not ALLOW_DMS and isinstance(message.channel, discord.DMChannel):
         return
 
+    image_prompt = None
+
     # Slash commands first
     if message.content.startswith("/"):
         command = message.content.split(" ")[0]
-        character = loadCharacterCard.Character.load_character_card(message.author.id, client.user.name)
+        character = loadCharacterCard.Character.load_character_card(message.author.id, client.user.name, use_openai=bool(OPENAI_API_KEY))
         text_response = chat_command(command, message, character)
     else:
         # Only process if channel is whitelisted
         if not whitelist.is_channel_whitelisted(message.channel):
             return
-        # Use our new approach
-        text_response = await generate_prompt_response(message)
+        # Generate a text response and an image prompt
+        text_response, image_prompt = await generate_prompt_response(message)
 
     # If response is longer than 2000 characters, split and send multiple messages
     chunks = [text_response[i:i + 2000] for i in range(0, len(text_response), 2000)]
@@ -115,6 +120,17 @@ async def on_message(message):
             await message.author.send(chunk)
         else:
             await message.channel.send(chunk)
+
+    if image_prompt:
+        print(f"Generating image for: {image_prompt}")
+        try:
+            image = await generate_image_async(image_prompt)
+            with BytesIO() as image_binary:
+                image.save(image_binary, 'PNG')
+                image_binary.seek(0)
+                await message.channel.send(file=discord.File(fp=image_binary, filename='generated_image.png'))
+        except Exception as e:
+            await message.channel.send(f"Error generating image: {e}")
 
 if DISCORD_TOKEN:
     client.run(DISCORD_TOKEN)

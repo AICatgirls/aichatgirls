@@ -3,7 +3,7 @@ import json
 import datetime
 import requests
 import openai
-from character_state import update_character_state
+from characterState import update_character_state
 import chatHistory
 import concurrent.futures
 import settings
@@ -171,7 +171,7 @@ async def generate_prompt_response(message):
     # 1) Load the Character
     #    Use the user's ID (or some unique string) + a fallback name like "Felicia".
     user_id = str(message.author.id)
-    character = loadCharacterCard.Character.load_character_card(user_id, "Felicia")
+    character = loadCharacterCard.Character.load_character_card(user_id, "Felicia", use_openai=bool(OPENAI_API_KEY))
 
     # 2) Build the context from the Character's data
     context = (
@@ -262,7 +262,6 @@ async def generate_prompt_response(message):
     print(f"  Location: {location}")
     print(f"  Mood: {mood}")
 
-
     # 9) Append new messages to chat history
     new_user_message = {
         "user": message.author.display_name,
@@ -283,4 +282,10 @@ async def generate_prompt_response(message):
     # 10) Save updated chat history
     chat_history_instance.save(chat_history_data)
 
-    return text_response
+    # 11) Generate image prompt
+    image_prompt = (
+        f"{action}, {mood}, {character.species} {character.sex}, {character.hairstyle} {character.hair_color} hair, "
+        f"{character.eye_color} eyes, {character.defining_features}, {appearance}, {location}"
+    )
+
+    return text_response, image_prompt

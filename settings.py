@@ -1,5 +1,6 @@
 import os
 import json
+from characterState import get_static_state
 
 SETTINGS_FOLDER = "settings"
 
@@ -18,6 +19,12 @@ def load_user_settings(user_id):
         "name": '',
         "description": '',
         "personality": '',
+        "species": '',
+        "sex": '',
+        "eye_color": '',
+        "hair_color": '',
+        "hairstyle": '',
+        "defining_features": '',
     }
     
     if os.path.exists(settings_path):
@@ -55,6 +62,12 @@ def handle_setting_command(user_id, args):
             temperature - A number between 0.1 and 1.0, default 0.5. The higher the number the more creative the response.
             repetition_penalty - A number between 0.1 and 1.9, default 1.18.
             prefix - A hidden phrase that the bot will silently say before giving a response
+            species - For image generation, the species of the character the bot is playing (e.g. catgirl, human, elf, etc.)
+            sex - For image generation (e.g. male, female, enby, etc.)
+            eye_color - For image generation (e.g. blue, green, brown, etc.)
+            hair_color - For image generation (e.g. blue, green, brown, etc.)
+            hairstyle - For image generation (e.g. long, short, curly, etc.)
+            defining_features - For image generation (e.g. glasses, tattoos, piercings, etc.)
         """
 
     setting = args[1]
@@ -71,6 +84,12 @@ def handle_setting_command(user_id, args):
         "name": '',
         "description": '',
         "personality": '',
+        "species": '',
+        "sex": '',
+        "eye_color": '',
+        "hair_color": '',
+        "hairstyle": '',
+        "defining_features": '',
     }
     
     # Check if the user is trying to set something that's not in our list
