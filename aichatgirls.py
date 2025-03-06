@@ -22,7 +22,7 @@ from datetime import datetime
 import encryption
 from chatCommand import chat_command
 from generate import generate_prompt_response
-from imagegen import generate_image_async
+from imagegen import generate_animation_gif_async
 from io import BytesIO
 import loadCharacterCard
 from scripts.whitelist import Whitelist
@@ -124,11 +124,8 @@ async def on_message(message):
     if image_prompt:
         print(f"Generating image for: {image_prompt}")
         try:
-            image = await generate_image_async(image_prompt)
-            with BytesIO() as image_binary:
-                image.save(image_binary, 'PNG')
-                image_binary.seek(0)
-                await message.channel.send(file=discord.File(fp=image_binary, filename='generated_image.png'))
+            gif_bytes = await generate_animation_gif_async(image_prompt)
+            await message.channel.send(file=discord.File(BytesIO(gif_bytes), filename='generated_animation.gif'))
         except Exception as e:
             await message.channel.send(f"Error generating image: {e}")
 

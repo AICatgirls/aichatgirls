@@ -1,50 +1,67 @@
-# imagegen.py
+# animategen.py
 
 import os
 import base64
 from io import BytesIO
-from PIL import Image
 import aiohttp
 
 # Default A1111 API endpoint; adjust via environment variable if needed.
 A1111_API_URL = os.getenv("A1111_API_URL", "http://127.0.0.1:7860/sdapi/v1/txt2img")
 
-async def generate_image_async(prompt: str) -> Image.Image:
+async def generate_animation_gif_async(prompt: str) -> bytes:
     """
-    Asynchronously generates an image using the Automatic1111 Stable Diffusion webUI API.
-
+    Asynchronously generates an animated GIF using the AnimateDiff extension via the A1111 API.
+    
     Args:
-        prompt (str): The text prompt for generating the image.
-
+        prompt (str): The text prompt for generating the animation.
+    
     Returns:
-        Image.Image: A PIL Image object of the generated image.
-
+        bytes: The generated GIF as raw bytes (decoded from base64).
+    
     Raises:
-        Exception: If the API call fails or no image is returned.
+        Exception: If the API call fails or no GIF is returned.
     """
-    # Build the payload with some default parameters.
     payload = {
-        "prompt": f"{prompt}, <lora:LCM_LoRA_Weights_SD15:1>",
-        "negative_prompt": "nsfw",  # You can adjust this or add more negatives.
+        "prompt": f"{prompt}, <lora:LCM_LoRA_Weights_SD15:0.3>",
         "steps": 10,
-        "sampler_index": "LCM",  # Adjust to your preferred sampler if needed.
+        "sampler_index": "LCM",   # Adjust sampler if needed.
         "cfg_scale": 1,
         "seed": -1,
         "width": 368,
         "height": 512,
+        "alwayson_scripts": {
+            "AnimateDiff": {
+                "args": [{
+                    "model": "improvedHumansMotion_refinedHumanMovement.ckpt",  # Motion module weight.
+                    "format": ["GIF"],             # Specify GIF format.
+                    "enable": True,
+                    "video_length": 16,            # Number of frames.
+                    "fps": 8,                      # Frames per second.
+                    "loop_number": 0,              # 0 means infinite looping.
+                    "closed_loop": "A",            # Set to "A" for aggressive closed loop.
+                    "batch_size": 16,              # Context batch size.
+                    "stride": 1,                   # Motion stride.
+                    "overlap": -1,                 # Use default overlap (batch_size // 4).
+                    "interp": "Off",               # Frame interpolation off (or "FILM" if desired).
+                    "interp_x": 10                 # Interpolation factor if enabled.
+                }]
+            }
+        }
     }
 
     async with aiohttp.ClientSession() as session:
-        async with session.post(A1111_API_URL, json=payload, timeout=120) as response:
+        async with session.post(A1111_API_URL, json=payload, timeout=300) as response:
             response.raise_for_status()
             result = await response.json()
-
-            # The API typically returns a list of base64-encoded images in the "images" key.
+            # Expecting the base64-encoded GIF in the "images" key.
             if "images" in result and result["images"]:
-                # Decode the first image in the list.
-                image_b64 = result["images"][0]
-                image_bytes = base64.b64decode(image_b64)
-                image = Image.open(BytesIO(image_bytes))
-                return image
+                gif_b64 = result["images"][0]
+                gif_bytes = base64.b64decode(gif_b64)
+                return gif_bytes
             else:
-                raise Exception("No image was returned from the API.")
+                raise Exception("No GIF was returned from the API. Response keys: " + str(result.keys()))
+
+# Example usage:
+# gif_bytes = await generate_animation_gif_async("A vibrant dance scene in a futuristic city")
+# with open("animation.gif", "wb") as f:
+#     f.write(gif_bytes)
