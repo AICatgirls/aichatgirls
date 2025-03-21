@@ -22,12 +22,13 @@ async def generate_animation_gif_async(prompt: str) -> bytes:
         Exception: If the API call fails or no GIF is returned.
     """
     payload = {
-        "prompt": f"{prompt}, <lora:LCM_LoRA_Weights_SD15:0.3>",
+        "prompt": f"{prompt}, <lora:AnimateLCM_sd15_t2v_lora:0.7>", # Get this LoRA from https://huggingface.co/wangfuyun/AnimateLCM/resolve/main/AnimateLCM_sd15_t2v_lora.safetensors
+        "negative_prompt": "nsfw",
         "steps": 10,
         "sampler_index": "LCM",   # Adjust sampler if needed.
-        "cfg_scale": 1,
+        "cfg_scale": 1.5,
         "seed": -1,
-        "width": 368,
+        "width": 448,
         "height": 512,
         "alwayson_scripts": {
             "AnimateDiff": {

@@ -113,21 +113,35 @@ async def on_message(message):
         # Generate a text response and an image prompt
         text_response, image_prompt = await generate_prompt_response(message)
 
+
+
     # If response is longer than 2000 characters, split and send multiple messages
     chunks = [text_response[i:i + 2000] for i in range(0, len(text_response), 2000)]
-    for chunk in chunks:
-        if isinstance(message.channel, discord.DMChannel):
-            await message.author.send(chunk)
-        else:
-            await message.channel.send(chunk)
+    sender = message.author.send if isinstance(message.channel, discord.DMChannel) else message.channel.send
 
     if image_prompt:
         print(f"Generating image for: {image_prompt}")
         try:
             gif_bytes = await generate_animation_gif_async(image_prompt)
-            await message.channel.send(file=discord.File(BytesIO(gif_bytes), filename='generated_animation.gif'))
+            if chunks:
+                # Send the first chunk with the image attached.
+                await sender(content=chunks[0],
+                             file=discord.File(BytesIO(gif_bytes), filename='generated_animation.gif'))
+                # Send any additional chunks separately.
+                for chunk in chunks[1:]:
+                    await sender(chunk)
+            else:
+                # If there's no text, just send the image.
+                await sender(file=discord.File(BytesIO(gif_bytes), filename='generated_animation.gif'))
         except Exception as e:
-            await message.channel.send(f"Error generating image: {e}")
+            # If image generation fails, send all text chunks and the error message.
+            for chunk in chunks:
+                await sender(chunk)
+            await sender(f"Error generating image: {e}")
+    else:
+        # If no image prompt, just send all text chunks.
+        for chunk in chunks:
+            await sender(chunk)
 
 if DISCORD_TOKEN:
     client.run(DISCORD_TOKEN)

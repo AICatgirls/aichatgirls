@@ -1,7 +1,7 @@
 def call_llm(prompt: str, use_openai: bool, temperature: float = 0.1) -> str:
     from generate import generate_openai_response, call_oobabooga
 
-    context = "You are a specialized assistant that updates a single piece of character state. You respond with as few words as are necessary."
+    context = "You are a specialized assistant that updates a single piece of character state. You respond with only a few words."
 
     if use_openai:
         return generate_openai_response(context, prompt, max_tokens=50, temperature=temperature)
@@ -56,7 +56,7 @@ def update_character_state(
 
     Args:
         character: An object or dict with at least `.name` and `.personality` attributes.
-        state_key (str): The name of the parameter to update (e.g. 'action', 'appearance', 'location', 'mood').
+        state_key (str): The name of the parameter to update (e.g. 'action', 'clothing', 'location', 'mood').
         current_value (str): The current value of that parameter.
         user_message (str): The most recent user message.
         bot_message (str): The character's latest message.
@@ -75,7 +75,7 @@ Recent conversation:
 - {character.name}: {bot_message}
 
 Based on this new context, what is the updated {state_key}?
-(If there's no change, use the previous {state_key}. Return up to six words in plain text only, no JSON or extra commentary.)
+(If there's no change, use the previous {state_key}. Return only a word or two.)
     """.strip()
 
     raw_response = call_llm(prompt, use_openai)

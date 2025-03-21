@@ -211,14 +211,14 @@ async def generate_prompt_response(message):
 
     # 8) Update character state using the last recorded state values from chat history
     previous_action = get_last_state_value(chat_history_data["messages"], "action", character.name)
-    previous_appearance = get_last_state_value(chat_history_data["messages"], "appearance", character.name)
+    previous_clothing = get_last_state_value(chat_history_data["messages"], "clothing", character.name)
     previous_location = get_last_state_value(chat_history_data["messages"], "location", character.name)
     previous_mood = get_last_state_value(chat_history_data["messages"], "mood", character.name)
 
     # Map state keys to their previous values.
     state_prev = {
         "action": previous_action,
-        "appearance": previous_appearance,
+        "clothing": previous_clothing,
         "location": previous_location,
         "mood": previous_mood,
     }
@@ -252,13 +252,13 @@ async def generate_prompt_response(message):
 
     # Now, assign the results to your variables.
     action = state_results["action"]
-    appearance = state_results["appearance"]
+    clothing = state_results["clothing"]
     location = state_results["location"]
     mood = state_results["mood"]
 
     print("Character States:")
     print(f"  Action: {action}")
-    print(f"  Appearance: {appearance}")
+    print(f"  Clothing: {clothing}")
     print(f"  Location: {location}")
     print(f"  Mood: {mood}")
 
@@ -273,7 +273,7 @@ async def generate_prompt_response(message):
         "message": text_response,
         "timestamp": datetime.datetime.now().isoformat(),
         "action": action,
-        "appearance": appearance,
+        "clothing": clothing,
         "location": location,
         "mood": mood
     }
@@ -285,7 +285,7 @@ async def generate_prompt_response(message):
     # 11) Generate image prompt
     image_prompt = (
         f"{action}, {mood}, {character.species} {character.sex}, {character.hairstyle} {character.hair_color} hair, "
-        f"{character.eye_color} eyes, {character.defining_features}, {appearance}, {location}"
+        f"{character.eye_color} eyes, {character.defining_features}, {clothing}, {location}"
     )
 
     return text_response, image_prompt
